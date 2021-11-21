@@ -33,3 +33,4 @@ npm-debug.log
 
 # The built Escript
 /livebook
+node_modules

@@ -1,0 +1,152 @@
+# Template
+
+## Install Section
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"1"} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.3.1"}
+])
+
+defmodule Livebook.AdventOfCode do
+  @moduledoc """
+  Helper module for dealing with text input from the AOC puzzles.
+  Originally created for the 2021 competition.
+  """
+
+  def as_single_lines(multiline_text) do
+    multiline_text
+    |> String.split("\n", trim: true)
+  end
+
+  def as_doublespaced_paragraphs(multiline_text) do
+    multiline_text
+    |> String.split("\n\n")
+  end
+
+  def as_paragraph_lines(paragraph) do
+    as_single_lines(paragraph)
+  end
+
+  def delimited_by_spaces(text) do
+    text
+    |> String.split(~r/\s+/)
+  end
+
+  def delimited_by_colons(text) do
+    text
+    |> String.split(~r/\:/)
+  end
+end
+
+alias Livebook.AdventOfCode
+
+day_of_advent =
+  IO.gets("Day of Advent:")
+  |> String.trim()
+  |> String.to_integer()
+
+# And then match on the return value
+case day_of_advent in 1..25 do
+  true ->
+    Kino.Markdown.new("""
+    [Link to puzzle #{day_of_advent}](https://adventofcode.com/2021/day/#{day_of_advent})
+    [Leaderboard](https://adventofcode.com/2021/leaderboard/private)
+    """)
+
+  false ->
+    "Must be a number from 1 to 25"
+end
+```
+
+## Part 1
+
+```elixir
+defmodule Part1 do
+  @input """
+  1721
+  979
+  366
+  299
+  675
+  1456
+  """
+
+  def solve do
+    data =
+      @input
+      |> AdventOfCode.as_single_lines()
+      |> Enum.map(&String.to_integer/1)
+
+    Enum.each(data, fn entry ->
+      other = 2020 - entry
+
+      case other in data do
+        true ->
+          IO.puts("Solution: #{entry} * #{other} == #{entry * other}")
+          true
+
+        _ ->
+          nil
+      end
+    end)
+  end
+end
+
+Part1.solve()
+```
+
+## Part 2
+
+```elixir
+defmodule Part2 do
+  @input """
+  1721
+  979
+  366
+  299
+  675
+  1456
+  """
+
+  def solve_general_case(data, goal \\ 2020) do
+    IO.puts("Goal: #{goal}")
+
+    val =
+      Enum.find(data, fn entry ->
+        other = goal - entry
+
+        case other in data do
+          true ->
+            IO.puts("Solution: #{entry} * #{other} == #{entry * other}")
+            true
+
+          _ ->
+            nil
+        end
+      end)
+
+    case val do
+      nil -> {nil, nil}
+      value -> {value, goal - value}
+    end
+  end
+
+  def solve do
+    data =
+      @input
+      |> AdventOfCode.as_single_lines()
+      |> Enum.map(&String.to_integer/1)
+
+    Enum.find(data, fn entry ->
+      other = 2020 - entry
+      IO.puts(other)
+      {a, b} = solve_general_case(data, other)
+      a && b && IO.puts("#{a} * #{b} * #{other} = #{a * b * other}")
+    end)
+  end
+end
+
+Part2.solve()
+```

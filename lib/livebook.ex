@@ -82,3 +82,7 @@ defmodule Livebook do
     Livebook.Notebook.Export.Elixir.notebook_to_elixir(notebook)
   end
 end
+
+alias Livebook.AdventOfCode
+AdventOfCode.as_single_lines("sdfdf\nasefewr")
+
