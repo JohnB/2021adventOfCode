@@ -1,0 +1,156 @@
+# Example for the 2020 Day 1 Puzzle
+
+## Installation and Data
+
+[2020 Day 1 Puzzle](https://adventofcode.com/2020/day/1)
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"1"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":"1721\n979\n366\n299\n675\n1456"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":"1630\n1801\n1917\n1958\n1953\n1521\n1990\n1959\n1543\n1798\n638\n1499\n1977\n1433\n1532\n1780\n1559\n1866\n1962\n1999\n1623\n1772\n1730\n1670\n1791\n1947\n1961\n1523\n959\n1998\n1693\n1490\n1712\n910\n1635\n1837\n586\n1590\n1741\n1739\n1660\n1883\n1777\n1734\n1413\n1456\n1511\n1957\n1738\n1685\n1677\n1419\n1566\n1639\n1578\n1922\n1856\n1946\n1965\n1649\n1854\n1610\n1806\n1424\n1616\n218\n1678\n1992\n1985\n903\n1626\n1412\n1964\n671\n1692\n1571\n1690\n1587\n1933\n1367\n1585\n1575\n498\n1601\n2005\n1711\n1948\n1991\n1580\n1704\n207\n1560\n1867\n1600\n1594\n1930\n1541\n1832\n1613\n1599\n1757\n71\n1534\n1940\n1982\n1960\n1530\n1908\n1857\n1410\n1987\n1526\n1546\n2002\n1923\n1972\n1752\n1984\n1754\n1916\n1942\n1980\n1608\n1398\n1438\n1955\n1968\n1799\n1976\n1847\n1775\n1904\n1983\n1945\n1554\n1486\n1527\n1884\n1553\n1736\n1561\n1513\n1695\n1431\n1997\n1405\n1872\n1434\n1679\n1609\n105\n1582\n1795\n1826\n1886\n1472\n2007\n1617\n1978\n1669\n1764\n1865\n1773\n1993\n1666\n1583\n2009\n1969\n2001\n1659\n1833\n1713\n1893\n2000\n1520\n1652\n1437\n1556\n1633\n1386\n1819\n1973\n1426\n1975\n2010\n1863\n1593\n1996\n1796\n1986\n1995\n657\n1784\n1644\n1941\n1596\n1849\n1065\n1927\n1525"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":"1721\n979\n366\n299\n675\n1456"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Puzzle Input: ","type":"textarea","value":"1630\n1801\n1917\n1958\n1953\n1521\n1990\n1959\n1543\n1798\n638\n1499\n1977\n1433\n1532\n1780\n1559\n1866\n1962\n1999\n1623\n1772\n1730\n1670\n1791\n1947\n1961\n1523\n959\n1998\n1693\n1490\n1712\n910\n1635\n1837\n586\n1590\n1741\n1739\n1660\n1883\n1777\n1734\n1413\n1456\n1511\n1957\n1738\n1685\n1677\n1419\n1566\n1639\n1578\n1922\n1856\n1946\n1965\n1649\n1854\n1610\n1806\n1424\n1616\n218\n1678\n1992\n1985\n903\n1626\n1412\n1964\n671\n1692\n1571\n1690\n1587\n1933\n1367\n1585\n1575\n498\n1601\n2005\n1711\n1948\n1991\n1580\n1704\n207\n1560\n1867\n1600\n1594\n1930\n1541\n1832\n1613\n1599\n1757\n71\n1534\n1940\n1982\n1960\n1530\n1908\n1857\n1410\n1987\n1526\n1546\n2002\n1923\n1972\n1752\n1984\n1754\n1916\n1942\n1980\n1608\n1398\n1438\n1955\n1968\n1799\n1976\n1847\n1775\n1904\n1983\n1945\n1554\n1486\n1527\n1884\n1553\n1736\n1561\n1513\n1695\n1431\n1997\n1405\n1872\n1434\n1679\n1609\n105\n1582\n1795\n1826\n1886\n1472\n2007\n1617\n1978\n1669\n1764\n1865\n1773\n1993\n1666\n1583\n2009\n1969\n2001\n1659\n1833\n1713\n1893\n2000\n1520\n1652\n1437\n1556\n1633\n1386\n1819\n1973\n1426\n1975\n2010\n1863\n1593\n1996\n1796\n1986\n1995\n657\n1784\n1644\n1941\n1596\n1849\n1065\n1927\n1525"} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.3.1"}
+])
+
+defmodule Livebook.AdventOfCode do
+  @moduledoc """
+  Helper module for dealing with text input from the AOC puzzles.
+  Originally created for the 2021 competition.
+
+  FIGURE OUT HOW TO JUST ALIAS THIS MODULE INTO LIVEBOOK
+  """
+
+  def as_single_lines(multiline_text) do
+    multiline_text
+    |> String.split("\n", trim: true)
+  end
+
+  def as_doublespaced_paragraphs(multiline_text) do
+    multiline_text
+    |> String.split("\n\n")
+  end
+
+  def as_paragraph_lines(paragraph) do
+    as_single_lines(paragraph)
+  end
+
+  def delimited_by_spaces(text) do
+    text
+    |> String.split(~r/\s+/)
+  end
+
+  def delimited_by_colons(text) do
+    text
+    |> String.split(~r/\:/)
+  end
+
+  # Being a multi-line input element, this gets all of it (within reason).
+  def get_kino_textarea(inputname) do
+    IO.getn(inputname, 1_000_000)
+  end
+
+  # Being a multi-line input element, this gets all of it (within reason).
+  def get_kino_integer(inputname) do
+    IO.gets(inputname)
+    |> String.trim()
+    |> String.to_integer()
+  end
+end
+
+alias Livebook.AdventOfCode
+
+day_of_advent = AdventOfCode.get_kino_integer("Day of Advent:")
+part1example = AdventOfCode.get_kino_textarea("Part 1 Example: ")
+part1input = AdventOfCode.get_kino_textarea("Part 1 Puzzle Input: ")
+part2example = AdventOfCode.get_kino_textarea("Part 2 Example: ")
+part2input = AdventOfCode.get_kino_textarea("Part 2 Puzzle Input: ")
+# IO.inspect([part1example, part1input, part2example, part2input], label: "p1p2")
+
+"Ready."
+```
+
+## Part 1
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+
+```elixir
+p1data = (IO.gets("Part 1 Input Data") =~ "example" && part1example) || part1input
+
+defmodule Part1 do
+  def solve(text) do
+    data =
+      text
+      |> AdventOfCode.as_single_lines()
+      |> Enum.map(&String.to_integer/1)
+
+    Enum.each(data, fn entry ->
+      other = 2020 - entry
+
+      case other in data do
+        true ->
+          IO.puts("Solution: #{entry} * #{other} == #{entry * other}")
+          true
+
+        _ ->
+          nil
+      end
+    end)
+  end
+end
+
+Part1.solve(p1data)
+```
+
+## Part 2
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+
+```elixir
+p2data = (IO.gets("Part 2 Input Data") =~ "example" && part2example) || part2input
+
+defmodule Part2 do
+  def solve_general_case(data, goal \\ 2020) do
+    val =
+      Enum.find(data, fn entry ->
+        other = goal - entry
+
+        case other in data do
+          true ->
+            # IO.puts("Solution: #{entry} * #{other} == #{entry * other}")
+            true
+
+          _ ->
+            nil
+        end
+      end)
+
+    case val do
+      nil -> {nil, nil}
+      value -> {value, goal - value}
+    end
+  end
+
+  def solve(text) do
+    data =
+      text
+      |> AdventOfCode.as_single_lines()
+      |> Enum.map(&String.to_integer/1)
+
+    Enum.find(data, fn entry ->
+      other = 2020 - entry
+      {a, b} = solve_general_case(data, other)
+      a && b && IO.puts("Solution: #{a} * #{b} * #{entry} = #{a * b * entry}")
+    end)
+  end
+end
+
+# SOMETHING IS BROKEN HERE!
+Part2.solve(p2data)
+```
