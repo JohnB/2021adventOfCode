@@ -17,69 +17,19 @@ Mix.install([
   {:kino, "~> 0.3.1"}
 ])
 
-defmodule Livebook.AdventOfCode do
-  @moduledoc """
-  Helper module for dealing with text input from the AOC puzzles.
-  Originally created for the 2021 competition.
+IEx.Helpers.c("lib/advent_of_code.ex")
 
-  FIGURE OUT HOW TO JUST ALIAS THIS MODULE INTO LIVEBOOK
-  """
-
-  def as_single_lines(multiline_text) do
-    multiline_text
-    |> String.split("\n", trim: true)
-  end
-
-  def as_doublespaced_paragraphs(multiline_text) do
-    multiline_text
-    |> String.split("\n\n")
-  end
-
-  def as_paragraph_lines(paragraph) do
-    as_single_lines(paragraph)
-  end
-
-  def delimited_by_spaces(text) do
-    text
-    |> String.split(~r/\s+/)
-  end
-
-  def delimited_by_colons(text) do
-    text
-    |> String.split(~r/\:/)
-  end
-
-  # Being a multi-line input element, this gets all of it (within reason).
-  def get_kino_textarea(inputname) do
-    IO.getn(inputname, 1_000_000)
-  end
-
-  # Being a multi-line input element, this gets all of it (within reason).
-  def get_kino_integer(inputname) do
-    IO.gets(inputname)
-    |> String.trim()
-    |> String.to_integer()
-  end
-end
-
-alias Livebook.AdventOfCode
-
-day_of_advent = AdventOfCode.get_kino_integer("Day of Advent:")
-part1example = AdventOfCode.get_kino_textarea("Part 1 Example: ")
-part1input = AdventOfCode.get_kino_textarea("Part 1 Puzzle Input: ")
-part2example = AdventOfCode.get_kino_textarea("Part 2 Example: ")
-part2input = AdventOfCode.get_kino_textarea("Part 2 Puzzle Input: ")
-# IO.inspect([part1example, part1input, part2example, part2input], label: "p1p2")
-
-"Ready."
+alias AdventOfCode, as: AOC
 ```
+
+[2021 Day 1 Puzzle](https://adventofcode.com/2021/day/1)
 
 ## Part 1
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-p1data = (IO.gets("Part 1 Input Data") =~ "example" && part1example) || part1input
+alias AdventOfCode, as: AOC
 
 defmodule Part1 do
   def solve(text) do
@@ -103,15 +53,16 @@ defmodule Part1 do
   end
 end
 
+p1data = AOC.p1data()
 Part1.solve(p1data)
 ```
 
 ## Part 2
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
 
 ```elixir
-p2data = (IO.gets("Part 2 Input Data") =~ "example" && part2example) || part2input
+alias AdventOfCode, as: AOC
 
 defmodule Part2 do
   def solve_general_case(data, goal \\ 2020) do
@@ -149,6 +100,6 @@ defmodule Part2 do
   end
 end
 
-# SOMETHING IS BROKEN HERE!
+p2data = AOC.p2data()
 Part2.solve(p2data)
 ```
