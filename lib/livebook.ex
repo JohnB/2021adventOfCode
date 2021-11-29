@@ -83,6 +83,3 @@ defmodule Livebook do
   end
 end
 
-alias Livebook.AdventOfCode
-AdventOfCode.as_single_lines("sdfdf\nasefewr")
-
