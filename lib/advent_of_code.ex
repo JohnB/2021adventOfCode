@@ -8,6 +8,8 @@ defmodule AdventOfCode do
     alias AdventOfCode, as: AOC
   """
 
+  alias Kino
+
   def as_single_lines(multiline_text) do
     multiline_text
     |> String.split("\n", trim: true)
@@ -42,6 +44,11 @@ defmodule AdventOfCode do
     IO.gets(inputname)
     |> String.trim()
     |> String.to_integer()
+  end
+
+  def link_to_day() do
+    day = day_of_advent()
+    Kino.Markdown.new("[2021 Day #{day} Puzzle](https://adventofcode.com/2021/day/#{day})")
   end
 
   def day_of_advent(), do: get_kino_integer("Day of Advent:")

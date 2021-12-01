@@ -1,6 +1,6 @@
 <!-- vim: syntax=markdown -->
 
-# Template
+# Day 1
 
 ## Installation and Data
 
@@ -20,7 +20,6 @@ Mix.install([
 ])
 
 IEx.Helpers.c("lib/advent_of_code.ex")
-
 alias AdventOfCode, as: AOC
 AOC.link_to_day()
 ```
