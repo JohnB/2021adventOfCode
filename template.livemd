@@ -29,7 +29,7 @@ AOC.link_to_day()
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-defmodule Part1 do
+defmodule Day3Part1 do
   def look_for_increase([a, b], acc) when b > a, do: acc + 1
   def look_for_increase(_, acc), do: acc
 
@@ -42,7 +42,7 @@ defmodule Part1 do
   end
 end
 
-Part1.solve(AOC.p1data())
+Day3Part1.solve(AOC.p1data())
 ```
 
 ## Part 2
@@ -50,7 +50,7 @@ Part1.solve(AOC.p1data())
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-defmodule Part2 do
+defmodule Day3Part2 do
   def look_for_increase([a, _b, _c, d], acc) when d > a, do: acc + 1
   def look_for_increase(_, acc), do: acc
 
@@ -63,5 +63,5 @@ defmodule Part2 do
   end
 end
 
-Part2.solve(AOC.p2data())
+Day3Part2.solve(AOC.p2data())
 ```
