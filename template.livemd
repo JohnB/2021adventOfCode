@@ -4,7 +4,7 @@
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"2"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"3"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
 
@@ -20,47 +20,25 @@ Mix.install([
 ])
 
 IEx.Helpers.c("lib/advent_of_code.ex")
-
 alias AdventOfCode, as: AOC
 AOC.link_to_day()
 ```
 
 ## Part 1
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-alias AdventOfCode, as: AOC
-
 defmodule Part1 do
-  def look_for_increase([_a] = _entry) do
-    0
-  end
-
-  def look_for_increase([a, b] = _entry) do
-    case b > a do
-      true ->
-        1
-
-      _ ->
-        0
-    end
-  end
+  def look_for_increase([a, b], acc) when b > a, do: acc + 1
+  def look_for_increase(_, acc), do: acc
 
   def solve(text) do
-    data =
-      text
-      |> AdventOfCode.as_single_lines()
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk_every(2, 1)
-
-    increases =
-      Enum.reduce(data, 0, fn entry, acc ->
-        # IO.inspect([entry, acc])
-        acc + look_for_increase(entry)
-      end)
-
-    IO.puts(increases)
+    text
+    |> AdventOfCode.as_single_lines()
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.chunk_every(2, 1)
+    |> Enum.reduce(0, &look_for_increase/2)
   end
 end
 
@@ -69,50 +47,19 @@ Part1.solve(AOC.p1data())
 
 ## Part 2
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-alias AdventOfCode, as: AOC
-
 defmodule Part2 do
-  def look_for_increase([_a] = _entry) do
-    0
-  end
-
-  def look_for_increase([_a, _b] = _entry) do
-  end
-
-  def look_for_increase([_a, _b, _c] = _entry) do
-    0
-  end
-
-  def look_for_increase([a, b, c, d] = _entry) do
-    left = a + b + c
-    right = b + c + d
-
-    case right > left do
-      true ->
-        1
-
-      _ ->
-        0
-    end
-  end
+  def look_for_increase([a, _b, _c, d], acc) when d > a, do: acc + 1
+  def look_for_increase(_, acc), do: acc
 
   def solve(text) do
-    data =
-      text
-      |> AdventOfCode.as_single_lines()
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk_every(4, 1)
-
-    increases =
-      Enum.reduce(data, 0, fn entry, acc ->
-        # IO.inspect([entry, acc])
-        acc + look_for_increase(entry)
-      end)
-
-    IO.puts(increases)
+    text
+    |> AdventOfCode.as_single_lines()
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.chunk_every(4, 1)
+    |> Enum.reduce(0, &look_for_increase/2)
   end
 end
 
