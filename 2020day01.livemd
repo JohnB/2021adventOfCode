@@ -1,3 +1,5 @@
+<!-- vim: syntax=markdown -->
+
 # Example for the 2020 Day 1 Puzzle
 
 ## Installation and Data
