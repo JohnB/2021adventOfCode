@@ -1,6 +1,6 @@
 <!-- vim: syntax=markdown -->
 
-# Day 1
+# Day 2
 
 ## Installation and Data
 
@@ -26,7 +26,7 @@ AOC.link_to_day()
 
 ## Part 1
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 alias AdventOfCode, as: AOC
@@ -68,7 +68,7 @@ Part1.solve(AOC.p1data())
 
 ## Part 2
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 alias AdventOfCode, as: AOC
