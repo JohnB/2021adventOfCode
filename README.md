@@ -28,3 +28,9 @@ Then just edit it [in the app](http://localhost:4000).
 <!-- Environment variables -->
 <!-- Environment variables -->
 <!-- And, oddly enough, it needs to be twice -->
+
+### Puzzle Answer Images
+
+* Day 1 Part 2
+![day1part2](history/day1part2.png)
+
