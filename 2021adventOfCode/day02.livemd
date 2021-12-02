@@ -60,62 +60,44 @@ Calculate the horizontal position and depth you would have after following the p
 
 ```elixir
 defmodule Day2Part1 do
-  def calculate_position("up" <> line, %{depth: depth, horizontal: horizontal}) do
-    IO.inspect([line, depth, horizontal], label: "up")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      depth: depth - delta,
-      horizontal: horizontal
-    }
-  end
-
-  def calculate_position("down" <> line, %{depth: depth, horizontal: horizontal}) do
-    IO.inspect([line, depth, horizontal], label: "down")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      depth: depth + delta,
-      horizontal: horizontal
-    }
-  end
-
-  def calculate_position("forward" <> line, %{depth: depth, horizontal: horizontal}) do
-    IO.inspect([line, depth, horizontal], label: "forward")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      depth: depth,
-      horizontal: horizontal + delta
-    }
-  end
-
-  def calculate_position(line, %{depth: depth, horizontal: horizontal}) do
-    IO.inspect([line, depth, horizontal], label: "OOPS")
-  end
-
   def score(%{depth: depth, horizontal: horizontal}) do
     %{depth: depth, horizontal: horizontal, score: depth * horizontal}
   end
 
   def solve(text) do
     text
-    |> IO.inspect(label: "0")
     |> AdventOfCode.as_single_lines()
-    |> IO.inspect(label: "1")
-    |> Enum.reduce(%{depth: 0, horizontal: 0}, &calculate_position/2)
+    |> Enum.reduce(
+      %{depth: 0, horizontal: 0},
+      fn line, %{depth: depth, horizontal: horizontal} ->
+        [command, digits] =
+          line
+          |> String.trim()
+          |> String.split(" ")
+
+        delta = String.to_integer(digits)
+
+        case command do
+          "down" ->
+            %{
+              depth: depth + delta,
+              horizontal: horizontal
+            }
+
+          "up" ->
+            %{
+              depth: depth - delta,
+              horizontal: horizontal
+            }
+
+          "forward" ->
+            %{
+              depth: depth,
+              horizontal: horizontal + delta
+            }
+        end
+      end
+    )
     |> IO.inspect(label: "1")
     |> score()
 
@@ -154,57 +136,6 @@ Using this new interpretation of the commands, calculate the horizontal position
 
 ```elixir
 defmodule Day2Part2 do
-  def calculate_position("up" <> line, %{depth: depth, horizontal: horizontal, aim: aim} = x) do
-    IO.inspect([line, depth, horizontal, x], label: "up")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      depth: depth,
-      horizontal: horizontal,
-      aim: aim - delta
-    }
-  end
-
-  def calculate_position("down" <> line, %{depth: depth, horizontal: horizontal, aim: aim} = x) do
-    IO.inspect([line, depth, horizontal, x], label: "down")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      # + delta, 
-      depth: depth,
-      horizontal: horizontal,
-      aim: aim + delta
-    }
-  end
-
-  def calculate_position("forward" <> line, %{depth: depth, horizontal: horizontal, aim: aim} = x) do
-    IO.inspect([line, depth, horizontal, x], label: "forward")
-
-    delta =
-      line
-      |> String.trim()
-      |> String.to_integer()
-
-    %{
-      # increases your depth by your aim multiplied by X.
-      depth: depth + aim * delta,
-      horizontal: horizontal + delta,
-      aim: aim
-    }
-  end
-
-  def calculate_position(line, %{depth: depth, horizontal: horizontal}) do
-    IO.inspect([line, depth, horizontal], label: "OOPS")
-  end
-
   def score(%{depth: depth, horizontal: horizontal}) do
     %{depth: depth, horizontal: horizontal, score: depth * horizontal}
   end
@@ -212,8 +143,41 @@ defmodule Day2Part2 do
   def solve(text) do
     text
     |> AdventOfCode.as_single_lines()
-    |> IO.inspect(label: "0")
-    |> Enum.reduce(%{depth: 0, horizontal: 0, aim: 0}, &calculate_position/2)
+    |> Enum.reduce(
+      %{depth: 0, horizontal: 0, aim: 0},
+      fn line, %{depth: depth, horizontal: horizontal, aim: aim} ->
+        [command, digits] =
+          line
+          |> String.trim()
+          |> String.split(" ")
+
+        delta = String.to_integer(digits)
+
+        case command do
+          "down" ->
+            %{
+              depth: depth,
+              horizontal: horizontal,
+              aim: aim + delta
+            }
+
+          "up" ->
+            %{
+              depth: depth,
+              horizontal: horizontal,
+              aim: aim - delta
+            }
+
+          "forward" ->
+            %{
+              # increases your depth by your aim multiplied by X.
+              depth: depth + aim * delta,
+              horizontal: horizontal + delta,
+              aim: aim
+            }
+        end
+      end
+    )
     |> IO.inspect(label: "1")
     |> score()
   end
