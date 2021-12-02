@@ -26,24 +26,28 @@ AOC.link_to_day()
 
 ## Part 1
 
---- Day 2: Dive! ---
+### Day 2: Dive!
+
 Now, you need to figure out how to pilot this thing.
 
 It seems like the submarine can take a series of commands like forward 1, down 2, or up 3:
 
-forward X increases the horizontal position by X units.
-down X increases the depth by X units.
-up X decreases the depth by X units.
-Note that since you're on a submarine, down and up affect your depth, and so they have the opposite result of what you might expect.
+* forward X increases the horizontal position by X units.
+* down X increases the depth by X units.
+* up X decreases the depth by X units.
+* Note that since you're on a submarine, down and up affect your depth, and so they have the opposite result of what you might expect.
 
 The submarine seems to already have a planned course (your puzzle input). You should probably figure out where it's going. For example:
 
+```
 forward 5
 down 5
 forward 8
 up 3
 down 8
 forward 2
+```
+
 Your horizontal position and depth both start at 0. The steps above would then modify them as follows:
 
 * forward 5 adds 5 to your horizontal position, a total of 5.
@@ -56,7 +60,7 @@ Your horizontal position and depth both start at 0. The steps above would then m
 
 Calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 defmodule Day2Part1 do
@@ -64,45 +68,53 @@ defmodule Day2Part1 do
     %{depth: depth, horizontal: horizontal, score: depth * horizontal}
   end
 
-  def solve(text) do
+  # return a list of tuples command and delta
+  def parse_commands_and_deltas(text) do
     text
     |> AdventOfCode.as_single_lines()
-    |> Enum.reduce(
-      %{depth: 0, horizontal: 0},
-      fn line, %{depth: depth, horizontal: horizontal} ->
-        [command, digits] =
-          line
-          |> String.trim()
-          |> String.split(" ")
+    |> Enum.map(fn line ->
+      [command, digits] =
+        line
+        |> String.trim()
+        |> String.split(" ")
 
-        delta = String.to_integer(digits)
+      delta = String.to_integer(digits)
 
-        case command do
-          "down" ->
-            %{
-              depth: depth + delta,
-              horizontal: horizontal
-            }
+      {command, delta}
+    end)
+  end
 
-          "up" ->
-            %{
-              depth: depth - delta,
-              horizontal: horizontal
-            }
+  def apply_change({command, delta}, %{depth: depth, horizontal: horizontal}) do
+    case command do
+      "down" ->
+        %{
+          depth: depth + delta,
+          horizontal: horizontal
+        }
 
-          "forward" ->
-            %{
-              depth: depth,
-              horizontal: horizontal + delta
-            }
-        end
-      end
-    )
-    |> IO.inspect(label: "1")
+      "up" ->
+        %{
+          depth: depth - delta,
+          horizontal: horizontal
+        }
+
+      "forward" ->
+        %{
+          depth: depth,
+          horizontal: horizontal + delta
+        }
+    end
+  end
+
+  def solve(text) do
+    text
+    |> parse_commands_and_deltas()
+    |> Enum.reduce(%{depth: 0, horizontal: 0}, fn {command, delta}, acc ->
+      apply_change({command, delta}, acc)
+    end)
     |> score()
 
-    # %{depth: 800, horizontal: 1975}
-    # 1580000
+    # %{depth: 10, horizontal: 15, score: 150}
   end
 end
 
@@ -132,15 +144,17 @@ Now, the above example does something different:
 
 Using this new interpretation of the commands, calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 defmodule Day2Part2 do
-  def score(%{depth: depth, horizontal: horizontal}) do
-    %{depth: depth, horizontal: horizontal, score: depth * horizontal}
+  def score(%{depth: depth, horizontal: horizontal, aim: aim}) do
+    %{depth: depth, horizontal: horizontal, aim: aim, score: depth * horizontal}
   end
 
   def solve(text) do
+    # NOTE: this doesn't include the code cleanup and encapsulation that was
+    # applied to part 1.
     text
     |> AdventOfCode.as_single_lines()
     |> Enum.reduce(
@@ -178,7 +192,6 @@ defmodule Day2Part2 do
         end
       end
     )
-    |> IO.inspect(label: "1")
     |> score()
   end
 

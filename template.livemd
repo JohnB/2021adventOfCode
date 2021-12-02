@@ -26,6 +26,10 @@ AOC.link_to_day()
 
 ## Part 1
 
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
@@ -40,6 +44,17 @@ defmodule Day3Part1 do
     |> Enum.chunk_every(2, 1)
     |> Enum.reduce(0, &look_for_increase/2)
   end
+
+  # def solve(text) do
+  #   text
+  #   |> parse_commands_and_deltas()
+  #   |> Enum.reduce(%{depth: 0, horizontal: 0, aim: 0}, fn {command, delta}, acc ->
+  #     apply_change({command, delta}, acc)
+  #   end)
+  #   |> score()
+
+  #   # %{depth: 10, horizontal: 15, score: 150}
+  # end
 end
 
 Day3Part1.solve(AOC.p1data())
@@ -47,19 +62,56 @@ Day3Part1.solve(AOC.p1data())
 
 ## Part 2
 
+### part 2 title here
+
+* Add part 2 puzzle instructions here
+
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 defmodule Day3Part2 do
-  def look_for_increase([a, _b, _c, d], acc) when d > a, do: acc + 1
-  def look_for_increase(_, acc), do: acc
+  def score(%{depth: depth, horizontal: horizontal}) do
+    %{depth: depth, horizontal: horizontal, score: depth * horizontal}
+  end
+
+  # return a list of tuples command and delta
+  def parse_commands_and_deltas(text) do
+    text
+    |> AdventOfCode.as_single_lines()
+    |> Enum.map(fn line ->
+      [command, digits] =
+        line
+        |> String.trim()
+        |> String.split(" ")
+
+      delta = String.to_integer(digits)
+
+      {command, delta}
+    end)
+  end
+
+  def apply_change({_command, delta}, %{
+        depth: depth,
+        horizontal: horizontal,
+        aim: aim
+      }) do
+    # JUST AN EXAMPLE
+    %{
+      depth: depth,
+      horizontal: horizontal,
+      aim: aim + delta
+    }
+  end
 
   def solve(text) do
     text
-    |> AdventOfCode.as_single_lines()
-    |> Enum.map(&String.to_integer/1)
-    |> Enum.chunk_every(4, 1)
-    |> Enum.reduce(0, &look_for_increase/2)
+    |> parse_commands_and_deltas()
+    |> Enum.reduce(%{depth: 0, horizontal: 0, aim: 0}, fn {command, delta}, acc ->
+      apply_change({command, delta}, acc)
+    end)
+    |> score()
+
+    # %{depth: 10, horizontal: 15, score: 150}
   end
 end
 
