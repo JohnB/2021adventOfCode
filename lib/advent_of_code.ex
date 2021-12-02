@@ -48,7 +48,9 @@ defmodule AdventOfCode do
 
   def link_to_day() do
     day = day_of_advent()
-    Kino.Markdown.new("[2021 Day #{day} Puzzle](https://adventofcode.com/2021/day/#{day})")
+    Kino.Markdown.new("[2021 Day #{day} Puzzle](https://adventofcode.com/2021/day/#{day})
+    Day#{day}Part1 Day#{day}Part2
+    ")
   end
 
   def day_of_advent(), do: get_kino_integer("Day of Advent:")
@@ -59,5 +61,14 @@ defmodule AdventOfCode do
   def part2example(), do: get_kino_textarea("Part 2 Example: ")
   def part2input(), do: get_kino_textarea("Part 2 Puzzle Input: ")
   def p2data(), do: (IO.gets("Part 2 Input Data") =~ "example" && part2example()) || part2input()
+
+  # Return the P2 data, unless it is empty so we return P1 data
+  def p2orp1data() do
+    is_example = (IO.gets("Part 2 Input Data") =~ "example")
+    p2text = (is_example && part2example()) || part2input()
+
+    # use p1 data if p2 is only whitespace
+    (p2text  =~ ~r{^\W*$} && p1data()) || p2text
+  end
 end
 
