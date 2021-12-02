@@ -34,3 +34,6 @@ Then just edit it [in the app](http://localhost:4000).
 * Day 1 Part 2
 ![day1part2](history/day1part2.png)
 
+* Day 2 Part 1
+![day2part1](history/day2part1.png)
+
