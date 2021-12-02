@@ -6,9 +6,9 @@
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"2"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":"forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":"forward 8\ndown 9\nforward 2\ndown 1\nforward 9\nforward 7\nforward 5\nup 3\nup 3\ndown 5\nforward 2\ndown 8\ndown 3\nforward 6\ndown 2\ndown 4\ndown 7\ndown 7\nforward 2\ndown 6\ndown 8\ndown 2\ndown 8\nup 9\ndown 8\nforward 8\ndown 5\nup 4\nforward 4\nforward 4\nforward 3\ndown 9\nforward 8\nup 3\nforward 2\nforward 3\nforward 6\ndown 7\ndown 2\nforward 4\nforward 7\nforward 6\nup 5\nup 1\nforward 4\ndown 9\nup 6\nforward 6\nup 9\nforward 1\ndown 9\nforward 4\ndown 3\nforward 7\nforward 5\ndown 1\nup 9\ndown 9\nforward 6\nforward 1\ndown 5\ndown 6\nforward 6\nforward 3\nup 4\nup 9\ndown 3\nforward 6\nup 4\nup 6\nforward 4\ndown 1\ndown 2\nup 9\nforward 8\ndown 2\ndown 3\ndown 4\nup 3\nforward 3\nforward 4\ndown 4\nforward 7\nforward 9\ndown 7\nforward 6\nforward 2\nup 6\nforward 7\nforward 9\ndown 5\nforward 6\nup 9\nforward 6\nforward 2\nforward 6\nup 3\ndown 1\nforward 5\ndown 3\nforward 7\ndown 4\nforward 1\nforward 7\ndown 1\nup 2\ndown 7\ndown 6\nforward 8\nforward 2\nforward 1\nforward 9\ndown 3\nforward 3\ndown 6\nup 8\nup 3\nforward 1\nforward 3\nforward 7\ndown 9\nforward 7\nforward 3\nup 6\nforward 4\ndown 9\nforward 2\ndown 4\nup 2\ndown 1\nup 1\ndown 6\nforward 1\nup 6\nup 7\nforward 3\nforward 3\nforward 2\nforward 1\ndown 7\nforward 9\ndown 5\ndown 9\nup 9\nforward 3\nforward 8\ndown 3\nforward 9\nforward 4\ndown 3\nup 4\nup 8\nup 4\ndown 8\ndown 6\ndown 5\nforward 2\nup 6\nup 1\nup 9\ndown 4\nup 8\nforward 6\ndown 1\nforward 7\nup 2\nforward 6\nup 2\ndown 6\ndown 5\nforward 2\ndown 2\ndown 1\nforward 8\nforward 1\nup 9\nforward 3\ndown 6\nforward 2\nforward 8\ndown 3\nforward 3\nforward 4\nforward 7\nforward 2\nup 4\nforward 8\nforward 1\nforward 9\ndown 3\ndown 1\nforward 8\ndown 5\ndown 3\nforward 5\ndown 7\ndown 1\nforward 8\nforward 2\nforward 4\nforward 8\nforward 6\ndown 1\nforward 5\nforward 9\nforward 9\nup 9\nforward 9\nforward 4\ndown 5\ndown 2\ndown 3\nforward 8\nforward 9\nup 8\nup 1\nup 6\nforward 7\nup 9\nforward 2\nforward 6\nup 6\nforward 3\nup 4\nforward 1\ndown 4\nup 6\ndown 5\nforward 7\nforward 6\ndown 3\ndown 4\nforward 3\ndown 6\ndown 1\nforward 5\nforward 7\nup 8\nforward 4\nup 7\ndown 4\nforward 3\ndown 7\nforward 7\nforward 4\nforward 1\nforward 8\nup 5\nup 6\nforward 5\nforward 3\ndown 6\nforward 8\nforward 2\nforward 7\ndown 7\ndown 8\ndown 3\nup 3\ndown 1\ndown 1\nforward 6\nforward 9\nforward 4\nforward 9\nforward 6\ndown 1\nforward 9\ndown 6\ndown 8\nup 5\ndown 8\nforward 4\nforward 2\nup 6\ndown 9\nforward 6\ndown 9\ndown 6\ndown 6\nforward 2\nup 8\ndown 7\ndown 2\nforward 2\nforward 2\ndown 1\nup 8\ndown 5\nforward 9\nforward 5\nforward 8\nforward 8\nforward 1\ndown 2\ndown 7\nup 5\nforward 9\nforward 4\nforward 4\nforward 6\ndown 7\nup 5\nforward 5\nup 9\ndown 7\ndown 4\ndown 9\nforward 7\nup 4\ndown 1\ndown 6\nup 2\nup 6\ndown 2\nforward 9\ndown 3\nforward 3\nforward 4\nforward 1\nup 2\nforward 6\ndown 3\nforward 2\ndown 9\nforward 8\nforward 3\nforward 2\nup 5\nforward 3\nforward 1\ndown 8\nup 2\nup 4\nup 5\ndown 3\ndown 6\ndown 1\nforward 4\nup 3\ndown 1\ndown 4\nup 6\nforward 8\ndown 5\ndown 7\ndown 7\nforward 9\nforward 9\ndown 2\nup 2\ndown 5\nforward 5\nforward 4\ndown 7\nforward 4\ndown 2\nforward 2\nforward 4\nup 8\ndown 8\nup 4\nforward 2\nforward 2\nup 8\nforward 2\ndown 3\ndown 7\ndown 9\nup 6\nup 3\nforward 2\nforward 3\nup 8\nforward 6\nup 8\nup 1\ndown 6\ndown 8\nup 9\ndown 1\nup 8\nforward 9\nforward 4\nforward 9\nforward 8\nforward 1\ndown 6\ndown 7\nup 5\ndown 1\nforward 9\ndown 9\nforward 7\ndown 5\nforward 7\ndown 1\ndown 4\ndown 4\nforward 6\nforward 1\nup 4\nup 2\nforward 7\ndown 6\ndown 2\ndown 3\nup 7\nup 1\ndown 6\ndown 6\ndown 8\ndown 8\nforward 5\nforward 1\nforward 5\nup 8\nforward 8\nup 8\nforward 1\ndown 9\nforward 1\nup 7\nup 3\ndown 1\ndown 9\nup 2\ndown 3\ndown 2\nforward 9\nup 9\nup 1\nup 5\nforward 8\ndown 3\ndown 7\nforward 7\ndown 8\ndown 5\ndown 5\ndown 4\ndown 7\nforward 6\nforward 6\nforward 4\nforward 6\nforward 3\nup 5\nforward 2\ndown 7\nforward 1\ndown 4\ndown 7\ndown 7\nforward 4\ndown 2\nup 4\nforward 2\nup 2\nup 3\ndown 5\nforward 3\ndown 2\nforward 5\ndown 2\ndown 1\nup 4\nup 5\nup 9\nforward 1\nforward 9\ndown 9\nup 8\nforward 9\nforward 7\ndown 9\ndown 2\ndown 9\nforward 9\nforward 7\nup 7\nforward 6\nup 6\nforward 5\nforward 6\ndown 4\nforward 8\nforward 5\nforward 2\nup 4\ndown 4\nforward 1\ndown 2\nup 9\nup 7\nup 2\nup 3\ndown 9\nforward 4\nup 6\nforward 5\nforward 5\nforward 9\nforward 1\ndown 6\nforward 8\ndown 5\nup 3\nup 1\ndown 2\nup 4\ndown 1\ndown 9\nforward 8\ndown 2\nforward 7\ndown 7\nup 5\ndown 7\ndown 3\nforward 2\nforward 2\nforward 4\ndown 9\ndown 6\ndown 9\nforward 6\ndown 6\ndown 9\nforward 1\ndown 1\nforward 8\ndown 4\nup 6\ndown 2\nforward 9\ndown 3\nup 3\ndown 2\nup 2\nup 5\ndown 8\nforward 1\nforward 3\ndown 8\nup 3\nup 3\nup 3\nforward 2\nup 3\ndown 4\ndown 1\ndown 7\nforward 3\ndown 3\ndown 8\ndown 9\nforward 9\nforward 3\nup 4\nforward 8\nforward 8\nup 7\nup 3\nforward 6\ndown 9\nup 1\nforward 2\ndown 6\nup 6\nforward 2\ndown 6\ndown 3\nup 7\nforward 6\ndown 6\ndown 1\ndown 5\nforward 6\nup 2\ndown 2\ndown 3\ndown 1\nup 9\nforward 6\nup 2\nforward 2\ndown 6\nup 3\nup 4\nforward 8\nup 8\nup 4\ndown 7\ndown 4\nup 9\nforward 9\nup 6\nforward 5\nforward 7\nforward 2\nforward 8\ndown 7\ndown 5\ndown 4\nup 3\nforward 7\ndown 2\nforward 5\nforward 9\nforward 4\nforward 7\nforward 8\nup 6\ndown 1\nforward 3\nforward 9\nforward 1\ndown 8\ndown 1\ndown 3\ndown 1\ndown 1\nup 3\ndown 5\nup 1\ndown 8\ndown 2\ndown 8\ndown 3\nforward 2\nforward 8\nforward 4\ndown 8\ndown 6\nforward 8\ndown 7\nforward 8\nforward 2\nforward 6\nforward 6\nforward 4\nup 2\nforward 3\nup 8\nforward 7\nforward 4\ndown 8\ndown 3\ndown 4\nup 8\nforward 5\nforward 3\nup 4\nup 2\ndown 6\nforward 4\nup 8\nup 3\nup 8\ndown 3\nup 1\nforward 2\ndown 4\ndown 4\ndown 9\ndown 5\nforward 9\nup 6\nup 5\ndown 8\ndown 6\ndown 7\nforward 8\nforward 4\nup 4\nforward 1\ndown 4\nup 4\ndown 9\nup 6\ndown 9\nup 3\nforward 4\ndown 1\ndown 5\ndown 5\nup 1\ndown 8\ndown 9\ndown 1\nforward 4\ndown 8\ndown 6\ndown 1\nforward 2\ndown 5\nup 1\nup 1\ndown 1\ndown 3\ndown 3\ndown 8\ndown 6\ndown 5\ndown 3\nup 3\nforward 5\ndown 7\ndown 7\nforward 2\nforward 6\nforward 1\ndown 8\nforward 2\nup 2\nforward 2\ndown 2\nforward 7\ndown 7\ndown 9\nup 2\nup 2\ndown 3\nforward 1\ndown 1\nforward 5\nforward 4\ndown 4\nforward 6\nforward 2\nforward 7\nforward 2\nforward 8\ndown 4\nup 3\ndown 3\nup 9\ndown 7\nup 8\ndown 1\ndown 8\nup 9\ndown 6\nup 5\nup 8\ndown 2\ndown 3\nforward 1\ndown 5\ndown 5\nforward 8\ndown 9\nforward 7\nforward 8\ndown 1\ndown 2\nup 8\ndown 2\nup 5\ndown 3\nforward 5\nforward 6\nup 4\nup 3\nforward 5\nforward 1\ndown 2\nforward 2\ndown 9\nup 7\ndown 2\nup 8\nforward 2\nforward 2\nup 4\nforward 5\ndown 4\nup 6\nup 8\nforward 9\nup 1\nforward 9\nforward 7\nforward 3\nforward 1\ndown 1\nforward 5\nforward 2\nforward 6\nforward 6\nforward 3\nforward 7\nup 7\ndown 6\ndown 2\nup 5\ndown 5\nup 2\nforward 7\nforward 2\ndown 9\nup 4\ndown 5\ndown 3\nforward 7\ndown 2\nforward 9\nforward 6\ndown 3\ndown 3\nforward 6\ndown 9\nforward 7\nup 5\nup 6\ndown 3\nup 4\nforward 4\nup 3\ndown 8\ndown 9\ndown 9\ndown 4\nup 1\nup 2\ndown 3\nforward 4\nforward 5\ndown 1\nup 3\ndown 8\ndown 7\nforward 2\nup 4\ndown 8\nforward 1\nforward 6\nup 8\ndown 2\ndown 6\nforward 5\nup 8\nforward 7\ndown 9\nforward 9\ndown 3\nforward 9\nforward 1\nforward 6\nup 7\nforward 1\ndown 5\ndown 8\ndown 3\nforward 5\nforward 6\ndown 7\nforward 4\ndown 6\nforward 4\nup 4\ndown 4\nforward 4\ndown 9\nforward 3\ndown 6\nforward 3\ndown 3\nup 3\nforward 3\ndown 4\ndown 4\ndown 4\ndown 5\nforward 5\ndown 9\ndown 7\ndown 1\nforward 5\nforward 3\nforward 8\ndown 5\nforward 4\nforward 3\ndown 8\nforward 1\nforward 1\ndown 6\nforward 4\ndown 5\nforward 8\ndown 7\nforward 6\ndown 7\nup 2\nforward 6\ndown 7\ndown 3\ndown 6\nup 2\nforward 8\nforward 5\ndown 6\nforward 5\nup 7\nforward 8\ndown 1\nforward 2\nup 7\ndown 4\nup 5\nforward 5\nforward 4\nforward 3\ndown 1\nforward 8\nup 9\ndown 2\nup 4\nforward 7\nup 6\nforward 3\ndown 8\nforward 4\ndown 2\ndown 9\nforward 8\ndown 5\nforward 3\ndown 9\nup 1\nforward 6\nup 9\ndown 7\nforward 5\nforward 3\ndown 8\ndown 6\nup 3\ndown 5\nforward 7\nup 2\nforward 4\nup 1\ndown 8\ndown 7\nforward 3\nforward 1\ndown 3\ndown 8\nforward 7\nup 2\ndown 7\nup 6\ndown 7\ndown 1\ndown 3\nup 6\nforward 2\ndown 5\nforward 1\nforward 7\nforward 2\ndown 8\ndown 8\ndown 7\nforward 7\nforward 5\nforward 1\nforward 7\nforward 3\ndown 2\nup 8\nup 4\nup 6\ndown 2\ndown 1\ndown 5\ndown 3\nforward 2\nup 1\nforward 8\nup 8\nforward 7\nup 1\ndown 7\nforward 7\nforward 5\nforward 3\nup 4\ndown 5\ndown 5\nforward 3\nforward 9\ndown 9\nup 6\nup 7\ndown 7\nforward 7"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":""} -->
 
@@ -26,20 +26,98 @@ AOC.link_to_day()
 
 ## Part 1
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+--- Day 2: Dive! ---
+Now, you need to figure out how to pilot this thing.
+
+It seems like the submarine can take a series of commands like forward 1, down 2, or up 3:
+
+forward X increases the horizontal position by X units.
+down X increases the depth by X units.
+up X decreases the depth by X units.
+Note that since you're on a submarine, down and up affect your depth, and so they have the opposite result of what you might expect.
+
+The submarine seems to already have a planned course (your puzzle input). You should probably figure out where it's going. For example:
+
+forward 5
+down 5
+forward 8
+up 3
+down 8
+forward 2
+Your horizontal position and depth both start at 0. The steps above would then modify them as follows:
+
+* forward 5 adds 5 to your horizontal position, a total of 5.
+* down 5 adds 5 to your depth, resulting in a value of 5.
+* forward 8 adds 8 to your horizontal position, a total of 13.
+* up 3 decreases your depth by 3, resulting in a value of 2.
+* down 8 adds 8 to your depth, resulting in a value of 10.
+* forward 2 adds 2 to your horizontal position, a total of 15.
+* After following these instructions, you would have a horizontal position of 15 and a depth of 10. (Multiplying these together produces 150.)
+
+Calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"puzzle input"} -->
 
 ```elixir
 defmodule Day2Part1 do
-  def look_for_increase([a, b], acc) when b > a, do: acc + 1
-  def look_for_increase(_, acc), do: acc
+  def calculate_position("up" <> line, %{depth: depth, horizontal: horizontal}) do
+    IO.inspect([line, depth, horizontal], label: "up")
+
+    delta =
+      line
+      |> String.trim()
+      |> String.to_integer()
+
+    %{
+      depth: depth - delta,
+      horizontal: horizontal
+    }
+  end
+
+  def calculate_position("down" <> line, %{depth: depth, horizontal: horizontal}) do
+    IO.inspect([line, depth, horizontal], label: "down")
+
+    delta =
+      line
+      |> String.trim()
+      |> String.to_integer()
+
+    %{
+      depth: depth + delta,
+      horizontal: horizontal
+    }
+  end
+
+  def calculate_position("forward" <> line, %{depth: depth, horizontal: horizontal}) do
+    IO.inspect([line, depth, horizontal], label: "forward")
+
+    delta =
+      line
+      |> String.trim()
+      |> String.to_integer()
+
+    %{
+      depth: depth,
+      horizontal: horizontal + delta
+    }
+  end
+
+  def calculate_position(line, %{depth: depth, horizontal: horizontal}) do
+    IO.inspect([line, depth, horizontal], label: "OOPS")
+  end
+
+  def score(%{depth: depth, horizontal: horizontal}) do
+    %{depth: depth, horizontal: horizontal, score: depth * horizontal}
+  end
 
   def solve(text) do
     text
+    |> IO.inspect(label: "0")
     |> AdventOfCode.as_single_lines()
-    |> Enum.map(&String.to_integer/1)
-    |> Enum.chunk_every(2, 1)
     |> IO.inspect(label: "1")
-    |> Enum.reduce(0, &look_for_increase/2)
+    |> Enum.reduce(%{depth: 0, horizontal: 0}, &calculate_position/2)
+    |> IO.inspect(label: "1")
+    |> score()
   end
 end
 
@@ -62,6 +140,9 @@ defmodule Day2Part2 do
     |> Enum.chunk_every(4, 1)
     |> IO.inspect(label: "1")
     |> Enum.reduce(0, &look_for_increase/2)
+
+    # %{depth: 800, horizontal: 1975}
+    # 1580000
   end
 end
 
