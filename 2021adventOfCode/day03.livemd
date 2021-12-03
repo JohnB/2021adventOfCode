@@ -1,6 +1,6 @@
 <!-- vim: syntax=markdown -->
 
-# Template
+# Day 3
 
 ## Installation and Data
 

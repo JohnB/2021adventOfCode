@@ -1,14 +1,14 @@
 <!-- vim: syntax=markdown -->
 
-# Template
+# Day 4
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"5"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"4"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":"p1e"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":"p1pi"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":""} -->
 
@@ -33,7 +33,7 @@ AOC.link_to_day()
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-defmodule Day5Part1 do
+defmodule Day4Part1 do
   def look_for_increase([a, b], acc) when b > a, do: acc + 1
   def look_for_increase(_, acc), do: acc
 
@@ -57,7 +57,7 @@ defmodule Day5Part1 do
   # end
 end
 
-Day5Part1.solve(AOC.p1data())
+Day4Part1.solve(AOC.p1data())
 ```
 
 ## Part 2
@@ -69,7 +69,7 @@ Day5Part1.solve(AOC.p1data())
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
-defmodule Day5Part2 do
+defmodule Day4Part2 do
   def score(%{depth: depth, horizontal: horizontal}) do
     %{depth: depth, horizontal: horizontal, score: depth * horizontal}
   end
@@ -115,5 +115,5 @@ defmodule Day5Part2 do
   end
 end
 
-Day5Part2.solve(AOC.p2orp1data())
+Day4Part2.solve(AOC.p2orp1data())
 ```
