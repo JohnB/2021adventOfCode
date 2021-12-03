@@ -159,75 +159,75 @@ Use the binary numbers in your diagnostic report to calculate the oxygen generat
 
 ```elixir
 defmodule Day3Part2 do
-  # return an array of arrays of 0s and 1s
-  def parse_data(text) do
-    text
-    |> AOC.as_single_lines()
-
-    # |> Enum.map(fn line ->
-    #   String.split(line, "", trim: true)
-    #   |> Enum.map(&String.to_integer/1)
-    # end)
+  def partition_at(array, bit_pos) do
+    {_ones, _zeros} =
+      array
+      |> Enum.split_with(fn line ->
+        "1" == String.slice(line, bit_pos, 1)
+      end)
   end
 
-  @anti_fav %{
-    "1" => "0",
-    "0" => "1"
-  }
-  def find_match(array, bit_pos, fav_bit) do
-    len = Enum.count(array)
-    half = len / 2
+  def find_match(array, style, _bit_pos) when length(array) == 1 do
+    hd(array)
+    |> IO.inspect()
+    |> String.to_integer(2)
+    |> IO.inspect(label: "DONE #{style}")
+  end
 
-    sum =
-      array
-      |> Enum.reduce(0, fn line, acc ->
-        case "1" == String.slice(line, bit_pos, 1) do
-          true ->
-            acc + 1
+  def find_match(array, :oxygen, bit_pos) do
+    {ones, zeros} =
+      partition_at(array, bit_pos)
+      |> IO.inspect()
 
-          false ->
-            acc
-        end
-      end)
+    len_ones = Enum.count(ones)
+    len_zeros = Enum.count(zeros)
 
-    keeper =
-      if sum > half do
-        fav_bit
-      else
-        if sum == half do
-          (fav_bit == "1" && "1") || "0"
-        else
-          @anti_fav[fav_bit]
-        end
-      end
+    cond do
+      len_ones >= len_zeros ->
+        find_match(ones, :oxygen, bit_pos + 1)
 
-    IO.inspect([sum, len, bit_pos, fav_bit, @anti_fav[fav_bit], keeper], label: "sum")
+      true ->
+        find_match(zeros, :oxygen, bit_pos + 1)
+    end
+  end
 
-    filtered =
-      Enum.filter(array, fn line ->
-        keeper == String.slice(line, bit_pos, 1)
-      end)
+  def find_match(array, :co2 = _style, bit_pos) do
+    {ones, zeros} =
+      partition_at(array, bit_pos)
+      |> IO.inspect()
 
-    if Enum.count(filtered) == 1 || bit_pos > 3 do
-      hd(filtered)
-      |> IO.inspect(label: "filtered")
-    else
-      # IO.inspect([filtered, bit_pos + 1, fav_bit])
-      find_match(filtered, bit_pos + 1, fav_bit)
+    len_ones = Enum.count(ones)
+    len_zeros = Enum.count(zeros)
+
+    cond do
+      len_zeros <= len_ones ->
+        find_match(zeros, :co2, bit_pos + 1)
+
+      true ->
+        find_match(ones, :co2, bit_pos + 1)
     end
   end
 
   def solve(text) do
     array =
       text
-      |> parse_data()
+      |> AOC.as_single_lines()
 
-    co2 = find_match(array, 0, "0") |> String.to_integer(2)
+    oxygen =
+      array
+      |> find_match(:oxygen, 0)
+      |> IO.inspect(label: "oxygen")
+
     IO.puts("---")
-    oxygen = find_match(array, 0, "1") |> String.to_integer(2)
+
+    co2 =
+      array
+      |> find_match(:co2, 0)
+      |> IO.inspect(label: "co2")
 
     # NOT 4728296 (co2 110001001100, oxygen 010111011110)
     #  OR 5051226
+    #  OR 4636702 ???
     # %{epsilon: 3877, gamma: 218, score: 845186}
     %{oxygen: oxygen, co2: co2, score: oxygen * co2}
   end
