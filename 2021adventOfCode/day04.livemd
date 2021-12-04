@@ -154,6 +154,9 @@ defmodule Day4Part1 do
     end)
   end
 
+  def search_for_win(_, boards) when length(boards) == 1 do
+  end
+
   def search_for_win([], boards) do
     IO.inspect(boards, label: "ERROR: no winner found in all the draws")
   end
@@ -179,6 +182,41 @@ defmodule Day4Part1 do
     end
   end
 
+  # recurse through marking boards and checking for wins
+  def until_a_win([latest | rest], [board]) do
+    marked = mark_board(board, latest)
+
+    if is_winner?(marked) do
+      {marked, latest}
+    else
+      until_a_win(rest, [marked])
+    end
+  end
+
+  # recurse through marking boards and checking for wins
+  def search_for_win2([latest | rest], boards) do
+    marked =
+      boards
+      |> Enum.map(fn board -> mark_board(board, latest) end)
+
+    # |> IO.inspect(label: "marked boards")
+
+    losers =
+      marked
+      |> Enum.reject(fn board -> is_winner?(board) end)
+
+    case Enum.count(losers) do
+      0 ->
+        {losers, latest}
+
+      1 ->
+        until_a_win(rest, losers)
+
+      _ ->
+        search_for_win2(rest, losers)
+    end
+  end
+
   def solve(text) do
     [draw | boards] =
       text
@@ -193,7 +231,7 @@ defmodule Day4Part1 do
       |> String.split(~r/\W/, trim: true)
       |> Enum.map(&String.to_integer/1)
 
-    {winner, latest} = search_for_win(draw, boards)
+    {winner, latest} = search_for_win2(draw, boards)
     # |> IO.inspect(label: "winning board")
 
     score =
