@@ -1,10 +1,10 @@
 <!-- vim: syntax=markdown -->
 
-# Template
+# Day 6
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"7"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"6"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
 
