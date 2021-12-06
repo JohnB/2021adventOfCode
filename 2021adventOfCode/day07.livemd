@@ -1,0 +1,67 @@
+<!-- vim: syntax=markdown -->
+
+# Template
+
+## Installation and Data
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"7"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Puzzle Input: ","type":"textarea","value":""} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.3.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+AOC.link_to_day()
+```
+
+## Part 1
+
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+AOC.p1data()
+# 4873
+|> score.()
+```
+
+## Part 2
+
+### part 2 title here
+
+* Add part 2 puzzle instructions here
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+AOC.p1data()
+# 4873
+|> score.()
+```
