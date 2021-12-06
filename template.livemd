@@ -65,3 +65,5 @@ AOC.p1data()
 # 4873
 |> score.()
 ```
+
+This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day07.livemd

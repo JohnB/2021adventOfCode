@@ -111,9 +111,7 @@ end
 
 buckets =
   AOC.p1data()
-  |> String.trim()
-  |> String.split(~r/,/, trim: true)
-  |> Enum.map(fn str -> String.to_integer(str) end)
+  |> AOC.as_comma_separated_integers()
   |> bucketize.()
   |> IO.inspect(label: "timers")
 

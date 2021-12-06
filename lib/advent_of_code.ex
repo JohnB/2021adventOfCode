@@ -10,6 +10,17 @@ defmodule AdventOfCode do
 
   alias Kino
 
+  def as_comma_separated_integers(text) do
+    text
+    |> String.trim()
+    |> String.split(",", trim: true)
+    |> Enum.map(fn digits ->
+      digits
+      |> String.trim()
+      |> String.to_integer()
+    end)
+  end
+
   def as_single_lines(multiline_text) do
     multiline_text
     |> String.split("\n", trim: true)
@@ -49,7 +60,7 @@ defmodule AdventOfCode do
   def link_to_day() do
     day = day_of_advent()
     Kino.Markdown.new("[2021 Day #{day} Puzzle](https://adventofcode.com/2021/day/#{day})
-    Day#{day}Part1 Day#{day}Part2
+    [eventual solution](https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day0#{day}.livemd)
     ")
   end
 
