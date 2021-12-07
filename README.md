@@ -30,7 +30,8 @@ Then just edit it [in the app](http://localhost:4000).
 <!-- And, oddly enough, it needs to be twice -->
 
 ### Puzzle Answer Images
-These are the ones I like
+These are the ones I like.
+
 * Day 1 Part 2
 ![day1part2](history/day1part2.png)
 
@@ -39,3 +40,6 @@ These are the ones I like
 
 * Day 5 Part 1
 ![day2part1](history/day5part1.png)
+
+* Day 6 Cost Equations
+![day2part1](history/day07costs.png)

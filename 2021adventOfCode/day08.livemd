@@ -1,10 +1,10 @@
 <!-- vim: syntax=markdown -->
 
-# Template for Day 9
+# Day 8
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"9"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"8"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
 
@@ -73,5 +73,13 @@ This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021a
 In an effort to "show my work", here are my searches that helped solve the puzzle.
 Some are very basic.
 
-* blah blah
-  [ginger]()
+These were from day7 - update them
+
+* Oddly, I rarely have a need for random-access 
+  [list access]()
+* I had a gut sense the answer would be the [median]() or
+  the [mean]() and wanted the understand them better.
+* A reminder of where [abs()]()
+  can be found (in the [Kernel](),
+  so no module name needed). Sometimes the answer is distressingly simple and the
+  impoter syndrome yells "I shoulda known that!"

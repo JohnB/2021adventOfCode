@@ -88,10 +88,7 @@ positions =
   |> AOC.as_comma_separated_integers()
   |> Enum.sort()
 
-# |> IO.inspect(label: "sorted")
-
 len = Enum.count(positions)
-sum = Enum.sum(positions)
 
 median =
   if Integer.is_even(len) do
@@ -106,8 +103,9 @@ cost = part1_cost.(positions, median)
 IO.puts("Part 1 Solution: #{cost}")
 # Part 1 Solution: 343468
 
-avg = Integer.floor_div(sum, len)
-cost2 = part2_cost.(positions, avg)
+sum = Enum.sum(positions)
+mean = Integer.floor_div(sum, len)
+cost2 = part2_cost.(positions, mean)
 IO.puts("Part 2 Solution: #{cost2}")
 # Part 2 Solution: 96086265
 ```
@@ -139,10 +137,20 @@ This costs a total of 168 fuel. This is the new cheapest possible outcome; the o
 
 Determine the horizontal position that the crabs can align to using the least fuel possible so they can make you an escape route! How much fuel must they spend to align to that position?
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
+<!-- livebook:{"break_markdown":true} -->
 
-```elixir
-
-```
+### Epilogue
 
 This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day07.livemd
+
+In an effort to "show my work", here are my searches that helped solve the puzzle.
+Some are very basic.
+
+* Oddly, I rarely have a need for random-access 
+  [list access](https://til.hashrocket.com/posts/633ba08446-accessing-a-single-element-of-a-list-by-index)
+* I had a gut sense the answer would be the [median](https://en.wikipedia.org/wiki/Median) or
+  the [mean](https://en.wikipedia.org/wiki/Mean) and wanted the understand them better.
+* A reminder of where [abs()](https://medium.com/@amuino/notes-on-elixir-math-a43e23e5068a)
+  can be found (in the Kernel, so no module name needed).
+  Sometimes the answer is distressingly simple:
+  "I shoulda known that!"
