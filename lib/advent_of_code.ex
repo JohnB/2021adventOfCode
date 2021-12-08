@@ -45,41 +45,7 @@ defmodule AdventOfCode do
     |> String.split(~r/\:/)
   end
 
-  # Being a multi-line input element, this gets all of it (within reason).
-  def get_kino_textarea(inputname) do
-    IO.getn(inputname, 1_000_000)
-  end
+  # -- startup and kino-related functions
 
-  # Being a multi-line input element, this gets all of it (within reason).
-  def get_kino_integer(inputname) do
-    IO.gets(inputname)
-    |> String.trim()
-    |> String.to_integer()
-  end
-
-  def link_to_day() do
-    day = day_of_advent()
-    Kino.Markdown.new("[2021 Day #{day} Puzzle](https://adventofcode.com/2021/day/#{day})
-    [eventual solution](https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day0#{day}.livemd)
-    ")
-  end
-
-  def day_of_advent(), do: get_kino_integer("Day of Advent:")
-  def part1example(), do: get_kino_textarea("Part 1 Example: ")
-  def part1input(), do: get_kino_textarea("Part 1 Puzzle Input: ")
-  def p1data(), do: (IO.gets("Part 1 Input Data") =~ "example" && part1example()) || part1input()
-
-  def part2example(), do: get_kino_textarea("Part 2 Example: ")
-  def part2input(), do: get_kino_textarea("Part 2 Puzzle Input: ")
-  def p2data(), do: (IO.gets("Part 2 Input Data") =~ "example" && part2example()) || part2input()
-
-  # Return the P2 data, unless it is empty so we return P1 data
-  def p2orp1data() do
-    is_example = (IO.gets("Part 2 Input Data") =~ "example")
-    p2text = (is_example && part2example()) || part2input()
-
-    # use p1 data if p2 is only whitespace
-    (p2text  =~ ~r{^\W*$} && p1data()) || p2text
-  end
 end
 

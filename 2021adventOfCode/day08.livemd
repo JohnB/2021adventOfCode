@@ -1,27 +1,42 @@
 <!-- vim: syntax=markdown -->
 
-# Day 8
+# Template for Day 8
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"8"} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Puzzle Input: ","type":"textarea","value":""} -->
-
 ```elixir
 Mix.install([
-  {:kino, "~> 0.3.1"}
+  {:kino, "~> 0.4.1"}
 ])
 
 IEx.Helpers.c("lib/advent_of_code.ex")
 alias AdventOfCode, as: AOC
-AOC.link_to_day()
+alias Kino.Input
+```
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
 ```
 
 ## Part 1
@@ -29,8 +44,6 @@ AOC.link_to_day()
 ### part 1 title here
 
 * Add part 1 puzzle instructions here
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 score = fn map ->
@@ -40,9 +53,9 @@ score = fn map ->
   |> Enum.count()
 end
 
-AOC.p1data()
+p1data.()
 # 4873
-|> score.()
+# |> score.()
 ```
 
 ## Part 2 (maybe solved above)
@@ -50,8 +63,6 @@ AOC.p1data()
 ### part 2 title here
 
 * Add part 2 puzzle instructions here
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 score = fn map ->
@@ -73,13 +84,5 @@ This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021a
 In an effort to "show my work", here are my searches that helped solve the puzzle.
 Some are very basic.
 
-These were from day7 - update them
-
-* Oddly, I rarely have a need for random-access 
-  [list access]()
-* I had a gut sense the answer would be the [median]() or
-  the [mean]() and wanted the understand them better.
-* A reminder of where [abs()]()
-  can be found (in the [Kernel](),
-  so no module name needed). Sometimes the answer is distressingly simple and the
-  impoter syndrome yells "I shoulda known that!"
+* blah blah
+  [ginger]()
