@@ -177,7 +177,7 @@ defmodule LivebookWeb.SessionLive do
           <div class="flex flex-col w-full space-y-16">
             <%= if @data_view.section_views == [] do %>
               <div class="flex justify-center">
-                <button class="button button-small"
+                <button class="button-base button-small"
                   phx-click="append_section">
                   + Section
                 </button>
@@ -305,7 +305,7 @@ defmodule LivebookWeb.SessionLive do
       <div class="flex flex-col mt-4 space-y-4">
         <%= for section_item <- @data_view.sections_items do %>
           <div class="flex items-center">
-            <button class="flex-grow flex items-center text-gray-500 hover:text-gray-900"
+            <button class="flex-grow flex items-center text-gray-500 hover:text-gray-900 text-left"
               data-element="sections-list-item"
               data-section-id={section_item.id}>
               <span class="flex items-center space-x-1">
@@ -400,11 +400,11 @@ defmodule LivebookWeb.SessionLive do
           </div>
           <div class="flex flex-col space-y-3">
             <div class="flex space-x-2">
-              <button class="button button-blue" phx-click="restart_runtime">
+              <button class="button-base button-blue" phx-click="restart_runtime">
                 <.remix_icon icon="wireless-charging-line" class="align-middle mr-1" />
                 <span>Reconnect</span>
               </button>
-              <button class="button button-outlined-red"
+              <button class="button-base button-outlined-red"
                 type="button"
                 phx-click="disconnect_runtime">
                 Disconnect
@@ -416,12 +416,12 @@ defmodule LivebookWeb.SessionLive do
             <.labeled_text label="Type" text={runtime_type_label(@empty_default_runtime)} />
           </div>
           <div class="flex space-x-2">
-            <button class="button button-blue" phx-click="connect_default_runtime">
+            <button class="button-base button-blue" phx-click="connect_default_runtime">
               <.remix_icon icon="wireless-charging-line" class="align-middle mr-1" />
               <span>Connect</span>
             </button>
             <%= live_patch to: Routes.session_path(@socket, :runtime_settings, @session.id),
-                  class: "button button-outlined-gray bg-transparent",
+                  class: "button-base button-outlined-gray bg-transparent",
                   type: "button" do  %>
               Configure
             <% end %>
@@ -474,9 +474,6 @@ defmodule LivebookWeb.SessionLive do
 
   defp settings_component_for(%Cell.Elixir{}),
     do: LivebookWeb.SessionLive.ElixirCellSettingsComponent
-
-  defp settings_component_for(%Cell.Input{}),
-    do: LivebookWeb.SessionLive.InputCellSettingsComponent
 
   defp branching_tooltip_attrs(name, parent_name) do
     direction = if String.length(name) >= 16, do: "left", else: "right"
@@ -652,16 +649,6 @@ defmodule LivebookWeb.SessionLive do
     {:noreply, socket}
   end
 
-  def handle_event("set_cell_value", %{"cell_id" => cell_id, "value" => value}, socket) do
-    # The browser may normalize newlines to \r\n, but we want \n
-    # to more closely imitate an actual shell
-    value = String.replace(value, "\r\n", "\n")
-
-    Session.set_cell_attributes(socket.assigns.session.pid, cell_id, %{value: value})
-
-    {:noreply, socket}
-  end
-
   def handle_event("move_cell", %{"cell_id" => cell_id, "offset" => offset}, socket) do
     offset = ensure_integer(offset)
     Session.move_cell(socket.assigns.session.pid, cell_id, offset)
@@ -678,38 +665,18 @@ defmodule LivebookWeb.SessionLive do
 
   def handle_event("queue_cell_evaluation", %{"cell_id" => cell_id}, socket) do
     Session.queue_cell_evaluation(socket.assigns.session.pid, cell_id)
-    {:noreply, socket}
-  end
-
-  def handle_event("queue_section_cells_evaluation", %{"section_id" => section_id}, socket) do
-    with {:ok, section} <- Notebook.fetch_section(socket.private.data.notebook, section_id) do
-      for cell <- section.cells, is_struct(cell, Cell.Elixir) do
-        Session.queue_cell_evaluation(socket.assigns.session.pid, cell.id)
-      end
-    end
 
     {:noreply, socket}
   end
 
-  def handle_event("queue_all_cells_evaluation", _params, socket) do
-    data = socket.private.data
-
-    for {cell, _} <- Notebook.elixir_cells_with_section(data.notebook),
-        data.cell_infos[cell.id].validity_status != :evaluated do
-      Session.queue_cell_evaluation(socket.assigns.session.pid, cell.id)
-    end
+  def handle_event("queue_section_evaluation", %{"section_id" => section_id}, socket) do
+    Session.queue_section_evaluation(socket.assigns.session.pid, section_id)
 
     {:noreply, socket}
   end
 
-  def handle_event("queue_bound_cells_evaluation", %{"cell_id" => cell_id}, socket) do
-    data = socket.private.data
-
-    with {:ok, cell, _section} <- Notebook.fetch_cell_and_section(data.notebook, cell_id) do
-      for {bound_cell, _} <- Session.Data.bound_cells_with_section(data, cell.id) do
-        Session.queue_cell_evaluation(socket.assigns.session.pid, bound_cell.id)
-      end
-    end
+  def handle_event("queue_full_evaluation", %{"forced_cell_ids" => forced_cell_ids}, socket) do
+    Session.queue_full_evaluation(socket.assigns.session.pid, forced_cell_ids)
 
     {:noreply, socket}
   end
@@ -791,6 +758,9 @@ defmodule LivebookWeb.SessionLive do
           column = JSInterop.js_column_to_elixir(column, line)
           {:details, line, column}
 
+        %{"type" => "signature", "hint" => hint} ->
+          {:signature, hint}
+
         %{"type" => "format", "code" => code} ->
           {:format, code}
       end
@@ -806,14 +776,14 @@ defmodule LivebookWeb.SessionLive do
         {:reply, %{"ref" => inspect(ref)}, socket}
       else
         info =
-          case params["type"] do
-            "completion" ->
+          cond do
+            params["type"] == "completion" and not params["editor_auto_completion"] ->
               "You need to start a runtime (or evaluate a cell) for code completion"
 
-            "format" ->
+            params["type"] == "format" ->
               "You need to start a runtime (or evaluate a cell) to enable code formatting"
 
-            _ ->
+            true ->
               nil
           end
 
@@ -931,6 +901,17 @@ defmodule LivebookWeb.SessionLive do
   def handle_info({:location_report, client_pid, report}, socket) do
     report = Map.put(report, :client_pid, inspect(client_pid))
     {:noreply, push_event(socket, "location_report", report)}
+  end
+
+  def handle_info({:set_input_value, input_id, value}, socket) do
+    Session.set_input_value(socket.assigns.session.pid, input_id, value)
+    {:noreply, socket}
+  end
+
+  def handle_info({:queue_bound_cells_evaluation, input_id}, socket) do
+    Session.queue_bound_cells_evaluation(socket.assigns.session.pid, input_id)
+
+    {:noreply, socket}
   end
 
   def handle_info(_message, socket), do: {:noreply, socket}
@@ -1090,18 +1071,9 @@ defmodule LivebookWeb.SessionLive do
     push_event(socket, "section_deleted", %{section_id: section_id})
   end
 
-  defp after_operation(socket, _prev_socket, {:insert_cell, client_pid, _, _, type, cell_id}) do
+  defp after_operation(socket, _prev_socket, {:insert_cell, client_pid, _, _, _, cell_id}) do
     if client_pid == self() do
-      case type do
-        :input ->
-          push_patch(socket,
-            to: Routes.session_path(socket, :cell_settings, socket.assigns.session.id, cell_id)
-          )
-
-        _ ->
-          socket
-      end
-      |> push_event("cell_inserted", %{cell_id: cell_id})
+      push_event(socket, "cell_inserted", %{cell_id: cell_id})
     else
       socket
     end
@@ -1233,6 +1205,15 @@ defmodule LivebookWeb.SessionLive do
     }
   end
 
+  # Currently we don't use signature docs, so we optimise the response
+  # to exclude them
+  defp process_intellisense_response(
+         %{signature_items: signature_items} = response,
+         {:signature, _hint}
+       ) do
+    %{response | signature_items: Enum.map(signature_items, &%{&1 | documentation: nil})}
+  end
+
   defp process_intellisense_response(response, _request), do: response
 
   defp autofocus_cell_id(%Notebook{sections: [%{cells: [%{id: id, source: ""}]}]}), do: id
@@ -1343,8 +1324,11 @@ defmodule LivebookWeb.SessionLive do
       validity_status: info.validity_status,
       evaluation_status: info.evaluation_status,
       evaluation_time_ms: info.evaluation_time_ms,
+      evaluation_start: info.evaluation_start,
       number_of_evaluations: info.number_of_evaluations,
-      reevaluate_automatically: cell.reevaluate_automatically
+      reevaluate_automatically: cell.reevaluate_automatically,
+      # Pass input values relevant to the given cell
+      input_values: input_values_for_cell(cell, data)
     }
   end
 
@@ -1358,20 +1342,13 @@ defmodule LivebookWeb.SessionLive do
     }
   end
 
-  defp cell_to_view(%Cell.Input{} = cell, _data) do
-    %{
-      id: cell.id,
-      type: :input,
-      input_type: cell.type,
-      name: cell.name,
-      value: cell.value,
-      error:
-        case Cell.Input.validate(cell) do
-          :ok -> nil
-          {:error, error} -> error
-        end,
-      props: cell.props
-    }
+  defp input_values_for_cell(cell, data) do
+    input_ids =
+      for output <- cell.outputs,
+          attrs <- Cell.Elixir.find_inputs_in_output(output),
+          do: attrs.id
+
+    Map.take(data.input_values, input_ids)
   end
 
   # Updates current data_view in response to an operation.

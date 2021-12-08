@@ -167,18 +167,77 @@ defmodule LivebookWeb.SessionLiveTest do
       assert %{notebook: %{sections: [%{cells: []}]}} = Session.get_data(session.pid)
     end
 
-    test "newlines in input values are normalized", %{conn: conn, session: session} do
+    test "editing input field in cell output", %{conn: conn, session: session, test: test} do
       section_id = insert_section(session.pid)
-      cell_id = insert_input_cell(session.pid, section_id)
+
+      Process.register(self(), test)
+
+      insert_cell_with_input(session.pid, section_id, %{
+        ref: :reference,
+        id: "input1",
+        type: :number,
+        label: "Name",
+        default: "hey",
+        destination: test
+      })
 
       {:ok, view, _} = live(conn, "/sessions/#{session.id}")
 
       view
-      |> element(~s/form[phx-change="set_cell_value"]/)
+      |> element(~s/[data-element="outputs-container"] form/)
+      |> render_change(%{"value" => "10"})
+
+      assert %{input_values: %{"input1" => 10}} = Session.get_data(session.pid)
+    end
+
+    test "newlines in text input are normalized", %{conn: conn, session: session, test: test} do
+      section_id = insert_section(session.pid)
+
+      Process.register(self(), test)
+
+      insert_cell_with_input(session.pid, section_id, %{
+        ref: :reference,
+        id: "input1",
+        type: :textarea,
+        label: "Name",
+        default: "hey",
+        destination: test
+      })
+
+      {:ok, view, _} = live(conn, "/sessions/#{session.id}")
+
+      view
+      |> element(~s/[data-element="outputs-container"] form/)
       |> render_change(%{"value" => "line\r\nline"})
 
-      assert %{notebook: %{sections: [%{cells: [%{id: ^cell_id, value: "line\nline"}]}]}} =
-               Session.get_data(session.pid)
+      assert %{input_values: %{"input1" => "line\nline"}} = Session.get_data(session.pid)
+    end
+  end
+
+  describe "outputs" do
+    test "dynamic frame output renders output sent from the frame server",
+         %{conn: conn, session: session} do
+      frame_pid =
+        spawn(fn ->
+          output = {:text, "Dynamic output in frame"}
+
+          receive do
+            {:connect, pid} -> send(pid, {:connect_reply, %{output: output}})
+          end
+        end)
+
+      frame_output = {:frame_dynamic, frame_pid}
+
+      section_id = insert_section(session.pid)
+      cell_id = insert_text_cell(session.pid, section_id, :elixir)
+      # Evaluate the cell
+      Session.queue_cell_evaluation(session.pid, cell_id)
+      # Send an additional output
+      send(session.pid, {:evaluation_output, cell_id, frame_output})
+
+      {:ok, view, _} = live(conn, "/sessions/#{session.id}")
+
+      assert render(view) =~ "Dynamic output in frame"
     end
   end
 
@@ -289,7 +348,8 @@ defmodule LivebookWeb.SessionLiveTest do
       |> render_hook("intellisense_request", %{
         "cell_id" => cell_id,
         "type" => "completion",
-        "hint" => "System.ver"
+        "hint" => "System.ver",
+        "editor_auto_completion" => false
       })
 
       assert_reply view, %{"ref" => nil}
@@ -310,7 +370,8 @@ defmodule LivebookWeb.SessionLiveTest do
       |> render_hook("intellisense_request", %{
         "cell_id" => cell_id,
         "type" => "completion",
-        "hint" => "System.ver"
+        "hint" => "System.ver",
+        "editor_auto_completion" => false
       })
 
       assert_reply view, %{"ref" => ref}
@@ -411,51 +472,6 @@ defmodule LivebookWeb.SessionLiveTest do
       assert render(view) =~ "Raymond Holt"
 
       send(client_pid, :stop)
-    end
-  end
-
-  describe "input cell settings" do
-    test "setting input cell attributes updates data", %{conn: conn, session: session} do
-      section_id = insert_section(session.pid)
-      cell_id = insert_input_cell(session.pid, section_id)
-
-      {:ok, view, _} = live(conn, "/sessions/#{session.id}/cell-settings/#{cell_id}")
-
-      form_selector = ~s/[role="dialog"] form/
-
-      assert view
-             |> element(form_selector)
-             |> render_change(%{attrs: %{type: "range"}}) =~
-               ~s{<div class="input-label">Min</div>}
-
-      view
-      |> element(form_selector)
-      |> render_change(%{attrs: %{name: "length"}})
-
-      view
-      |> element(form_selector)
-      |> render_change(%{attrs: %{props: %{min: "10"}}})
-
-      view
-      |> element(form_selector)
-      |> render_submit()
-
-      assert %{
-               notebook: %{
-                 sections: [
-                   %{
-                     cells: [
-                       %{
-                         id: ^cell_id,
-                         type: :range,
-                         name: "length",
-                         props: %{min: 10, max: 100, step: 1}
-                       }
-                     ]
-                   }
-                 ]
-               }
-             } = Session.get_data(session.pid)
     end
   end
 
@@ -654,8 +670,9 @@ defmodule LivebookWeb.SessionLiveTest do
 
     test "if the remote notebook is already imported, redirects to the session",
          %{conn: conn, test: test} do
-      index_url = "http://example.com/#{test}/index.livemd"
-      notebook_url = "http://example.com/#{test}/notebook.livemd"
+      test_path = test |> to_string() |> URI.encode_www_form()
+      index_url = "http://example.com/#{test_path}/index.livemd"
+      notebook_url = "http://example.com/#{test_path}/notebook.livemd"
 
       {:ok, index_session} = Sessions.create_session(origin: {:url, index_url})
       {:ok, notebook_session} = Sessions.create_session(origin: {:url, notebook_url})
@@ -668,8 +685,9 @@ defmodule LivebookWeb.SessionLiveTest do
 
     test "renders an error message if there are already multiple session imported from the relative URL",
          %{conn: conn, test: test} do
-      index_url = "http://example.com/#{test}/index.livemd"
-      notebook_url = "http://example.com/#{test}/notebook.livemd"
+      test_path = test |> to_string() |> URI.encode_www_form()
+      index_url = "http://example.com/#{test_path}/index.livemd"
+      notebook_url = "http://example.com/#{test_path}/notebook.livemd"
 
       {:ok, index_session} = Sessions.create_session(origin: {:url, index_url})
       {:ok, _notebook_session1} = Sessions.create_session(origin: {:url, notebook_url})
@@ -721,10 +739,20 @@ defmodule LivebookWeb.SessionLiveTest do
     cell.id
   end
 
-  defp insert_input_cell(session_pid, section_id) do
-    Session.insert_cell(session_pid, section_id, 0, :input)
-    %{notebook: %{sections: [%{cells: [cell]}]}} = Session.get_data(session_pid)
-    cell.id
+  defp insert_cell_with_input(session_pid, section_id, input) do
+    code =
+      quote do
+        send(
+          Process.group_leader(),
+          {:io_request, self(), make_ref(),
+           {:livebook_put_output, {:input, unquote(Macro.escape(input))}}}
+        )
+      end
+      |> Macro.to_string()
+
+    cell_id = insert_text_cell(session_pid, section_id, :elixir, code)
+    Session.queue_cell_evaluation(session_pid, cell_id)
+    cell_id
   end
 
   defp create_user_with_name(name) do

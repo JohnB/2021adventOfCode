@@ -66,15 +66,18 @@ const Cell = {
           this.state.evaluationDigest = evaluation_digest;
 
           const updateChangeIndicator = () => {
-            const indicator = this.el.querySelector(
-              `[data-element="change-indicator"]`
+            const cellStatus = this.el.querySelector(
+              `[data-element="cell-status"]`
             );
+            const indicator =
+              cellStatus &&
+              cellStatus.querySelector(`[data-element="change-indicator"]`);
 
             if (indicator) {
               const source = this.state.liveEditor.getSource();
               const digest = md5Base64(source);
               const changed = this.state.evaluationDigest !== digest;
-              indicator.toggleAttribute("data-js-shown", changed);
+              cellStatus.toggleAttribute("data-js-changed", changed);
             }
           };
 
@@ -134,20 +137,6 @@ const Cell = {
       });
     }
 
-    if (this.props.type === "input") {
-      const input = getInput(this);
-
-      input.addEventListener("blur", (event) => {
-        // Wait for other handlers to complete and if still in insert
-        // force focus
-        setTimeout(() => {
-          if (this.state.isFocused && this.state.insertMode) {
-            input.focus();
-          }
-        }, 0);
-      });
-    }
-
     this._unsubscribeFromNavigationEvents = globalPubSub.subscribe(
       "navigation",
       (event) => {
@@ -183,14 +172,6 @@ function getProps(hook) {
     type: getAttributeOrThrow(hook.el, "data-type"),
     sessionPath: getAttributeOrThrow(hook.el, "data-session-path"),
   };
-}
-
-function getInput(hook) {
-  if (hook.props.type === "input") {
-    return hook.el.querySelector(`[data-element="input"]`);
-  } else {
-    return null;
-  }
 }
 
 /**
@@ -231,8 +212,6 @@ function handleElementFocused(hook, focusableId, scroll) {
 }
 
 function handleInsertModeChanged(hook, insertMode) {
-  const input = getInput(hook);
-
   if (hook.state.isFocused && !hook.state.insertMode && insertMode) {
     hook.state.insertMode = insertMode;
 
@@ -255,23 +234,11 @@ function handleInsertModeChanged(hook, insertMode) {
 
       broadcastSelection(hook);
     }
-
-    if (input) {
-      input.focus();
-      // selectionStart is only supported on text based input
-      if (input.selectionStart !== null) {
-        input.selectionStart = input.selectionEnd = input.value.length;
-      }
-    }
   } else if (hook.state.insertMode && !insertMode) {
     hook.state.insertMode = insertMode;
 
     if (hook.state.liveEditor) {
       hook.state.liveEditor.blur();
-    }
-
-    if (input) {
-      input.blur();
     }
   }
 }

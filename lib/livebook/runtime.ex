@@ -36,6 +36,7 @@ defprotocol Livebook.Runtime do
   @type intellisense_request ::
           completion_request()
           | details_request()
+          | signature_request()
           | format_request()
 
   @typedoc """
@@ -49,6 +50,7 @@ defprotocol Livebook.Runtime do
           nil
           | completion_response()
           | details_response()
+          | signature_response()
           | format_response()
 
   @typedoc """
@@ -70,7 +72,7 @@ defprotocol Livebook.Runtime do
         }
 
   @type completion_item_kind ::
-          :function | :module | :struct | :interface | :type | :variable | :field
+          :function | :module | :struct | :interface | :type | :variable | :field | :keyword
 
   @typedoc """
   Looks up more details about an identifier found in `column` in `line`.
@@ -83,6 +85,25 @@ defprotocol Livebook.Runtime do
             to: non_neg_integer()
           },
           contents: list(String.t())
+        }
+
+  @typedoc """
+  Looks up a list of function signatures matching the given hint.
+
+  The resulting information includes current position in the
+  argument list.
+  """
+  @type signature_request :: {:signature, hint :: String.t()}
+
+  @type signature_response :: %{
+          active_argument: non_neg_integer(),
+          signature_items: list(signature_item())
+        }
+
+  @type signature_item :: %{
+          signature: String.t(),
+          arguments: list(String.t()),
+          documentation: String.t() | nil
         }
 
   @typedoc """
@@ -139,10 +160,11 @@ defprotocol Livebook.Runtime do
       result of the evaluation. Recognised metadata entries
       are: `evaluation_time_ms`
 
-  The evaluation may request user input by sending
-  `{:evaluation_input, ref, reply_to, prompt}` to the runtime owner,
-  which is supposed to reply with `{:evaluation_input_reply, reply}`
-  where `reply` is either `{:ok, input}` or `:error` if no matching
+  The output may include input fields. The evaluation may then
+  request the current value of a previously rendered input by
+  sending `{:evaluation_input, ref, reply_to, input_id}` to the
+  runtime owner, which is supposed to reply with `{:evaluation_input_reply, reply}`
+  where `reply` is either `{:ok, value}` or `:error` if no matching
   input can be found.
 
   In all of the above `ref` is the evaluation reference.

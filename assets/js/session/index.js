@@ -5,6 +5,7 @@ import {
   selectElementContent,
   smoothlyScrollToElement,
   setFavicon,
+  cancelEvent,
 } from "../lib/utils";
 import { getAttributeOrDefault } from "../lib/attribute";
 import KeyBuffer from "./key_buffer";
@@ -296,6 +297,7 @@ function handleDocumentKeyDown(hook, event) {
 
   const cmd = isMacOS() ? event.metaKey : event.ctrlKey;
   const alt = event.altKey;
+  const shift = event.shiftKey;
   const key = event.key;
   const keyBuffer = hook.state.keyBuffer;
 
@@ -305,18 +307,25 @@ function handleDocumentKeyDown(hook, event) {
     if (key === "Escape") {
       const monacoInputOpen = !!event.target.closest(".monaco-inputbox");
 
-      const activeDescendant = event.target.getAttribute(
-        "aria-activedescendant"
+      const editor = event.target.closest(".monaco-editor.focused");
+
+      const completionBoxOpen = !!(
+        editor &&
+        editor.querySelector(".editor-widget.parameter-hints-widget.visible")
       );
-      const completionBoxOpen =
-        activeDescendant && activeDescendant.includes("suggest");
+      const signatureDetailsOpen = !!(
+        editor && editor.querySelector(".editor-widget.suggest-widget.visible")
+      );
 
       // Ignore Escape if it's supposed to close some Monaco input
-      // (like the find/replace box), or the completion box.
-      if (!monacoInputOpen && !completionBoxOpen) {
+      // (like the find/replace box), or an intellisense widget
+      if (!monacoInputOpen && !completionBoxOpen && !signatureDetailsOpen) {
         escapeInsertMode(hook);
       }
-    } else if (cmd && key === "Enter" && !alt) {
+    } else if (cmd && shift && !alt && key === "Enter") {
+      cancelEvent(event);
+      queueFullCellsEvaluation(hook, true);
+    } else if (cmd && !alt && key === "Enter") {
       cancelEvent(event);
       if (hook.state.focusedCellType === "elixir") {
         queueFocusedCellEvaluation(hook);
@@ -326,9 +335,15 @@ function handleDocumentKeyDown(hook, event) {
       saveNotebook(hook);
     }
   } else {
-    // Ignore inputs and notebook/section title fields
+    // Ignore keystrokes on input fields
     if (isEditableElement(event.target)) {
       keyBuffer.reset();
+
+      // Use Escape for universal blur
+      if (key === "Escape") {
+        event.target.blur();
+      }
+
       return;
     }
 
@@ -339,12 +354,17 @@ function handleDocumentKeyDown(hook, event) {
       saveNotebook(hook);
     } else if (keyBuffer.tryMatch(["d", "d"])) {
       deleteFocusedCell(hook);
-    } else if (keyBuffer.tryMatch(["e", "e"]) || (cmd && key === "Enter")) {
+    } else if (cmd && shift && !alt && key === "Enter") {
+      queueFullCellsEvaluation(hook, true);
+    } else if (keyBuffer.tryMatch(["e", "a"])) {
+      queueFullCellsEvaluation(hook, false);
+    } else if (
+      keyBuffer.tryMatch(["e", "e"]) ||
+      (cmd && !alt && key === "Enter")
+    ) {
       if (hook.state.focusedCellType === "elixir") {
         queueFocusedCellEvaluation(hook);
       }
-    } else if (keyBuffer.tryMatch(["e", "a"])) {
-      queueAllCellsEvaluation(hook);
     } else if (keyBuffer.tryMatch(["e", "s"])) {
       queueFocusedSectionEvaluation(hook);
     } else if (keyBuffer.tryMatch(["s", "s"])) {
@@ -429,7 +449,7 @@ function handleDocumentMouseDown(hook, event) {
 function editableElementClicked(event, element) {
   if (element) {
     const editableElement = element.querySelector(
-      `[data-element="editor-container"], [data-element="input"], [data-element="heading"]`
+      `[data-element="editor-container"], [data-element="heading"]`
     );
     return editableElement.contains(event.target);
   }
@@ -566,7 +586,7 @@ function initializeFocus(hook) {
     const element = document.getElementById(htmlId);
 
     if (element) {
-      const focusableEl = elementelement.closest("[data-focusable-id]");
+      const focusableEl = element.closest("[data-focusable-id]");
 
       if (focusableEl) {
         setFocusedEl(hook, focusableEl.dataset.focusableId);
@@ -656,8 +676,15 @@ function queueFocusedCellEvaluation(hook) {
   }
 }
 
-function queueAllCellsEvaluation(hook) {
-  hook.pushEvent("queue_all_cells_evaluation", {});
+function queueFullCellsEvaluation(hook, includeFocused) {
+  const forcedCellIds =
+    includeFocused && hook.state.focusedId && isCell(hook.state.focusedId)
+      ? [hook.state.focusedId]
+      : [];
+
+  hook.pushEvent("queue_full_evaluation", {
+    forced_cell_ids: forcedCellIds,
+  });
 }
 
 function queueFocusedSectionEvaluation(hook) {
@@ -665,7 +692,7 @@ function queueFocusedSectionEvaluation(hook) {
     const sectionId = getSectionIdByFocusableId(hook.state.focusedId);
 
     if (sectionId) {
-      hook.pushEvent("queue_section_cells_evaluation", {
+      hook.pushEvent("queue_section_evaluation", {
         section_id: sectionId,
       });
     }
@@ -1059,13 +1086,6 @@ function getClientsListToggle() {
 
 function getRuntimeInfoToggle() {
   return document.querySelector(`[data-element="runtime-info-toggle"]`);
-}
-
-function cancelEvent(event) {
-  // Cancel any default browser behavior.
-  event.preventDefault();
-  // Stop event propagation (e.g. so it doesn't reach the editor).
-  event.stopPropagation();
 }
 
 export default Session;

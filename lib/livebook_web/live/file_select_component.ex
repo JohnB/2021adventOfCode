@@ -188,7 +188,7 @@ defmodule LivebookWeb.FileSelectComponent do
     ~H"""
     <.menu id="file-system-menu" disabled={@file_system_select_disabled} position="left">
       <:toggle>
-        <button type="button" class="button button-gray button-square-icon"
+        <button type="button" class="button-base button-gray button-square-icon"
           aria-label="switch file system"
           disabled={@file_system_select_disabled}>
           <.file_system_icon file_system={@file.file_system} />
@@ -273,7 +273,7 @@ defmodule LivebookWeb.FileSelectComponent do
           </span>
           <span class={"flex font-medium overflow-hidden whitespace-nowrap #{if(@file_info.is_running, do: "text-green-300", else: "text-gray-500")}"}>
             <%= if @file_info.highlighted != "" do %>
-              <span class={"font-medium #{if(@file_info.is_running, do: "text-green-400", else: "text-gray-900")}"}>
+              <span class={"font-medium overflow-hidden overflow-ellipsis #{if(@file_info.is_running, do: "text-green-400", else: "text-gray-900")}"}>
                 <%= @file_info.highlighted %>
               </span>
             <% end %>

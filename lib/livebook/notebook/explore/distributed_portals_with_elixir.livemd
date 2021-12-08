@@ -195,19 +195,30 @@ Date.from_iso8601("2020-02-30")
 Now, what happens if we want our code to behave differently depending
 if the date is valid or not? We can use `case` to pattern match on
 the different tuples. This is also a good opportunity to use Livebook's
-inputs to pass different values to our code:
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Date","type":"text","value":""} -->
+inputs to pass different values to our code. To render inputs, we need to
+install the [Kino](https://github.com/livebook-dev/kino) library:
 
 ```elixir
-# Read the date input, which returns something like "2020-02-30\n"
-input = IO.gets("Date: ")
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+```
 
-# So we trim the newline from the input value
-trimmed = String.trim(input)
+Kino allows our code notebooks to control Livebook itself. Let's render
+an input by evaluating the cell below:
+
+```elixir
+date_input = Kino.Input.text("Date")
+```
+
+Now we can read its value and parse it:
+
+```elixir
+# Read the date input, which returns something like "2020-02-30"
+input = Kino.Input.read(date_input)
 
 # And then match on the return value
-case Date.from_iso8601(trimmed) do
+case Date.from_iso8601(input) do
   {:ok, date} ->
     "We got a valid date: #{inspect(date)}"
 
@@ -216,15 +227,12 @@ case Date.from_iso8601(trimmed) do
 end
 ```
 
-We have been using `IO.inspect` to write values out of the notebook
-and here we used `IO.gets` to read data in. The string passed to
-`IO.gets` must have the same suffix as the input name. The returned
-string is always appended with a newline. Then we remove the trailing new
-line and use `case` to pattern match on the different outcomes of the
-`Date.from_iso8601` function. We say the `case` above has two clauses,
-one matching on `{:ok, date}` and another on `{:error, reason}`.
-Try changing the input and re-executing the cell to see how the outcome
-changes.
+Now try adding a date to the input above, such as `2020-02-30` and
+reevaluate the cell accordingly. In this example, we are using `case`
+to pattern match on the different outcomes of the `Date.from_iso8601`
+function. We say the `case` above has two clauses, one matching on
+`{:ok, date}` and another on `{:error, reason}`. Try changing the input
+and re-executing the cell to see how the outcome changes.
 
 Finally, we can also pattern match on maps. This is used to extract the
 values for the given keys:
@@ -715,22 +723,26 @@ IO.puts Node.get_cookie()
 
 Now paste the result of the other node name and its cookie in the inputs below:
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Other node","type":"text","value":""} -->
+```elixir
+node_input = Kino.Input.text("Other node")
+```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Other cookie","type":"text","value":""} -->
+```elixir
+cookie_input = Kino.Input.text("Other cookie")
+```
 
 And now execute the code cell below, which will read the inputs, configure the
 cookie, and connect to the other notebook:
 
 ```elixir
 other_node =
-  IO.gets("Other node: ")
-  |> String.trim()
+  node_input
+  |> Kino.Input.read()
   |> String.to_atom()
 
 other_cookie =
-  IO.gets("Other cookie: ")
-  |> String.trim()
+  cookie_input
+  |> Kino.Input.read()
   |> String.to_atom()
 
 Node.set_cookie(other_node, other_cookie)

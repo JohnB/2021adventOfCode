@@ -71,7 +71,8 @@ defmodule Livebook.Session do
           created_at: DateTime.t(),
           runtime_monitor_ref: reference() | nil,
           autosave_timer_ref: reference() | nil,
-          save_task_pid: pid() | nil
+          save_task_pid: pid() | nil,
+          saved_default_file: FileSystem.File.t() | nil
         }
 
   @typedoc """
@@ -99,6 +100,9 @@ defmodule Livebook.Session do
 
     * `:images` - a map from image name to its binary content, an alternative
       to `:copy_images_from` when the images are in memory
+
+    * `:autosave_path` - a local directory to save notebooks without a file into.
+      Defaults to `Livebook.Config.autosave_path/1`
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(opts) do
@@ -144,7 +148,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends notebook attributes update to the server.
+  Sends notebook attributes update to the server.
   """
   @spec set_notebook_attributes(pid(), map()) :: :ok
   def set_notebook_attributes(pid, attrs) do
@@ -152,7 +156,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends section insertion request to the server.
+  Sends section insertion request to the server.
   """
   @spec insert_section(pid(), non_neg_integer()) :: :ok
   def insert_section(pid, index) do
@@ -160,7 +164,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends section insertion request to the server.
+  Sends section insertion request to the server.
   """
   @spec insert_section_into(pid(), Section.id(), non_neg_integer()) :: :ok
   def insert_section_into(pid, section_id, index) do
@@ -168,7 +172,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends parent update request to the server.
+  Sends parent update request to the server.
   """
   @spec set_section_parent(pid(), Section.id(), Section.id()) :: :ok
   def set_section_parent(pid, section_id, parent_id) do
@@ -176,7 +180,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends parent update request to the server.
+  Sends parent update request to the server.
   """
   @spec unset_section_parent(pid(), Section.id()) :: :ok
   def unset_section_parent(pid, section_id) do
@@ -184,7 +188,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell insertion request to the server.
+  Sends cell insertion request to the server.
   """
   @spec insert_cell(pid(), Section.id(), non_neg_integer(), Cell.type()) :: :ok
   def insert_cell(pid, section_id, index, type) do
@@ -192,7 +196,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends section deletion request to the server.
+  Sends section deletion request to the server.
   """
   @spec delete_section(pid(), Section.id(), boolean()) :: :ok
   def delete_section(pid, section_id, delete_cells) do
@@ -200,7 +204,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell deletion request to the server.
+  Sends cell deletion request to the server.
   """
   @spec delete_cell(pid(), Cell.id()) :: :ok
   def delete_cell(pid, cell_id) do
@@ -208,7 +212,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell restoration request to the server.
+  Sends cell restoration request to the server.
   """
   @spec restore_cell(pid(), Cell.id()) :: :ok
   def restore_cell(pid, cell_id) do
@@ -216,7 +220,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell move request to the server.
+  Sends cell move request to the server.
   """
   @spec move_cell(pid(), Cell.id(), integer()) :: :ok
   def move_cell(pid, cell_id, offset) do
@@ -224,7 +228,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends section move request to the server.
+  Sends section move request to the server.
   """
   @spec move_section(pid(), Section.id(), integer()) :: :ok
   def move_section(pid, section_id, offset) do
@@ -232,7 +236,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell evaluation request to the server.
+  Sends cell evaluation request to the server.
   """
   @spec queue_cell_evaluation(pid(), Cell.id()) :: :ok
   def queue_cell_evaluation(pid, cell_id) do
@@ -240,7 +244,34 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends cell evaluation cancellation request to the server.
+  Sends section evaluation request to the server.
+  """
+  @spec queue_section_evaluation(pid(), Section.id()) :: :ok
+  def queue_section_evaluation(pid, section_id) do
+    GenServer.cast(pid, {:queue_section_evaluation, self(), section_id})
+  end
+
+  @doc """
+  Sends input bound cells evaluation request to the server.
+  """
+  @spec queue_bound_cells_evaluation(pid(), Data.input_id()) :: :ok
+  def queue_bound_cells_evaluation(pid, input_id) do
+    GenServer.cast(pid, {:queue_bound_cells_evaluation, self(), input_id})
+  end
+
+  @doc """
+  Sends full evaluation request to the server.
+
+  All outdated (new/stale/changed) cells, as well as cells given
+  as `forced_cell_ids` are scheduled for evaluation.
+  """
+  @spec queue_full_evaluation(pid(), list(Cell.id())) :: :ok
+  def queue_full_evaluation(pid, forced_cell_ids) do
+    GenServer.cast(pid, {:queue_full_evaluation, self(), forced_cell_ids})
+  end
+
+  @doc """
+  Sends cell evaluation cancellation request to the server.
   """
   @spec cancel_cell_evaluation(pid(), Cell.id()) :: :ok
   def cancel_cell_evaluation(pid, cell_id) do
@@ -248,7 +279,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends erase outputs request to the server.
+  Sends erase outputs request to the server.
   """
   @spec erase_outputs(pid()) :: :ok
   def erase_outputs(pid) do
@@ -256,7 +287,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends notebook name update request to the server.
+  Sends notebook name update request to the server.
   """
   @spec set_notebook_name(pid(), String.t()) :: :ok
   def set_notebook_name(pid, name) do
@@ -264,7 +295,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends section name update request to the server.
+  Sends section name update request to the server.
   """
   @spec set_section_name(pid(), Section.id(), String.t()) :: :ok
   def set_section_name(pid, section_id, name) do
@@ -272,7 +303,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends a cell delta to apply to the server.
+  Sends a cell delta to apply to the server.
   """
   @spec apply_cell_delta(pid(), Cell.id(), Delta.t(), Data.cell_revision()) :: :ok
   def apply_cell_delta(pid, cell_id, delta, revision) do
@@ -280,7 +311,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously informs at what revision the given client is.
+  Informs at what revision the given client is.
 
   This helps to remove old deltas that are no longer necessary.
   """
@@ -290,7 +321,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends a cell attributes update to the server.
+  Sends a cell attributes update to the server.
   """
   @spec set_cell_attributes(pid(), Cell.id(), map()) :: :ok
   def set_cell_attributes(pid, cell_id, attrs) do
@@ -298,7 +329,15 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously connects to the given runtime.
+  Sends a input value update to the server.
+  """
+  @spec set_input_value(pid(), Data.input_id(), term()) :: :ok
+  def set_input_value(pid, input_id, value) do
+    GenServer.cast(pid, {:set_input_value, self(), input_id, value})
+  end
+
+  @doc """
+  Connects to the given runtime.
 
   Note that this results in initializing the corresponding remote node
   with modules and processes required for evaluation.
@@ -309,7 +348,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously disconnects from the current runtime.
+  Disconnects from the current runtime.
 
   Note that this results in clearing the evaluation state.
   """
@@ -319,7 +358,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends file location update request to the server.
+  Sends file location update request to the server.
   """
   @spec set_file(pid(), FileSystem.File.t() | nil) :: :ok
   def set_file(pid, file) do
@@ -327,7 +366,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends save request to the server.
+  Sends save request to the server.
 
   If there's a file set and the notebook changed since the last save,
   it will be persisted to said file.
@@ -348,7 +387,7 @@ defmodule Livebook.Session do
   end
 
   @doc """
-  Asynchronously sends a close request to the server.
+  Sends a close request to the server.
 
   This results in saving the file and broadcasting
   a :closed message to the session topic.
@@ -391,7 +430,9 @@ defmodule Livebook.Session do
         created_at: DateTime.utc_now(),
         runtime_monitor_ref: nil,
         autosave_timer_ref: nil,
-        save_task_pid: nil
+        autosave_path: opts[:autosave_path],
+        save_task_pid: nil,
+        saved_default_file: nil
       }
 
       {:ok, state}
@@ -519,7 +560,35 @@ defmodule Livebook.Session do
   end
 
   def handle_cast({:queue_cell_evaluation, client_pid, cell_id}, state) do
-    operation = {:queue_cell_evaluation, client_pid, cell_id}
+    operation = {:queue_cells_evaluation, client_pid, [cell_id]}
+    {:noreply, handle_operation(state, operation)}
+  end
+
+  def handle_cast({:queue_section_evaluation, client_pid, section_id}, state) do
+    case Notebook.fetch_section(state.data.notebook, section_id) do
+      {:ok, section} ->
+        cell_ids = for cell <- section.cells, is_struct(cell, Cell.Elixir), do: cell.id
+        operation = {:queue_cells_evaluation, client_pid, cell_ids}
+        {:noreply, handle_operation(state, operation)}
+
+      :error ->
+        {:noreply, state}
+    end
+  end
+
+  def handle_cast({:queue_bound_cells_evaluation, client_pid, input_id}, state) do
+    cell_ids =
+      for {bound_cell, _} <- Data.bound_cells_with_section(state.data, input_id),
+          do: bound_cell.id
+
+    operation = {:queue_cells_evaluation, client_pid, cell_ids}
+    {:noreply, handle_operation(state, operation)}
+  end
+
+  def handle_cast({:queue_full_evaluation, client_pid, forced_cell_ids}, state) do
+    cell_ids = Data.cell_ids_for_full_evaluation(state.data, forced_cell_ids)
+
+    operation = {:queue_cells_evaluation, client_pid, cell_ids}
     {:noreply, handle_operation(state, operation)}
   end
 
@@ -555,6 +624,11 @@ defmodule Livebook.Session do
 
   def handle_cast({:set_cell_attributes, client_pid, cell_id, attrs}, state) do
     operation = {:set_cell_attributes, client_pid, cell_id, attrs}
+    {:noreply, handle_operation(state, operation)}
+  end
+
+  def handle_cast({:set_input_value, client_pid, input_id, value}, state) do
+    operation = {:set_input_value, client_pid, input_id, value}
     {:noreply, handle_operation(state, operation)}
   end
 
@@ -606,7 +680,7 @@ defmodule Livebook.Session do
     maybe_save_notebook_sync(state)
     broadcast_message(state.session_id, :session_closed)
 
-    {:stop, :shutdown, state}
+    {:stop, :normal, state}
   end
 
   @impl true
@@ -629,8 +703,8 @@ defmodule Livebook.Session do
     {:noreply, state}
   end
 
-  def handle_info({:evaluation_output, cell_id, string}, state) do
-    operation = {:add_cell_evaluation_output, self(), cell_id, string}
+  def handle_info({:evaluation_output, cell_id, output}, state) do
+    operation = {:add_cell_evaluation_output, self(), cell_id, output}
     {:noreply, handle_operation(state, operation)}
   end
 
@@ -639,27 +713,17 @@ defmodule Livebook.Session do
     {:noreply, handle_operation(state, operation)}
   end
 
-  def handle_info({:evaluation_input, cell_id, reply_to, prompt}, state) do
-    input_cell = Notebook.input_cell_for_prompt(state.data.notebook, cell_id, prompt)
-
-    reply =
-      with {:ok, cell} <- input_cell,
-           :ok <- Cell.Input.validate(cell) do
-        {:ok, cell.value <> "\n"}
+  def handle_info({:evaluation_input, cell_id, reply_to, input_id}, state) do
+    {reply, state} =
+      with {:ok, cell, _section} <- Notebook.fetch_cell_and_section(state.data.notebook, cell_id),
+           {:ok, value} <- Map.fetch(state.data.input_values, input_id) do
+        state = handle_operation(state, {:bind_input, self(), cell.id, input_id})
+        {{:ok, value}, state}
       else
-        _ -> :error
+        _ -> {:error, state}
       end
 
     send(reply_to, {:evaluation_input_reply, reply})
-
-    state =
-      case input_cell do
-        {:ok, input_cell} ->
-          handle_operation(state, {:bind_input, self(), cell_id, input_cell.id})
-
-        :error ->
-          state
-      end
 
     {:noreply, state}
   end
@@ -685,9 +749,9 @@ defmodule Livebook.Session do
     {:noreply, handle_operation(state, operation)}
   end
 
-  def handle_info({:save_finished, pid, result}, %{save_task_pid: pid} = state) do
+  def handle_info({:save_finished, pid, result, file, default?}, %{save_task_pid: pid} = state) do
     state = %{state | save_task_pid: nil}
-    {:noreply, handle_save_finished(state, result)}
+    {:noreply, handle_save_finished(state, result, file, default?)}
   end
 
   def handle_info(_message, state), do: {:noreply, state}
@@ -970,15 +1034,16 @@ defmodule Livebook.Session do
   end
 
   defp maybe_save_notebook_async(state) do
-    if should_save_notebook?(state) do
+    {file, default?} = notebook_autosave_file(state)
+
+    if file && should_save_notebook?(state) do
       pid = self()
-      file = state.data.file
       content = LiveMarkdown.Export.notebook_to_markdown(state.data.notebook)
 
       {:ok, pid} =
         Task.start(fn ->
           result = FileSystem.File.write(file, content)
-          send(pid, {:save_finished, self(), result})
+          send(pid, {:save_finished, self(), result, file, default?})
         end)
 
       %{state | save_task_pid: pid}
@@ -988,20 +1053,68 @@ defmodule Livebook.Session do
   end
 
   defp maybe_save_notebook_sync(state) do
-    if should_save_notebook?(state) do
+    {file, default?} = notebook_autosave_file(state)
+
+    if file && should_save_notebook?(state) do
       content = LiveMarkdown.Export.notebook_to_markdown(state.data.notebook)
-      result = FileSystem.File.write(state.data.file, content)
-      handle_save_finished(state, result)
+      result = FileSystem.File.write(file, content)
+      handle_save_finished(state, result, file, default?)
     else
       state
     end
   end
 
   defp should_save_notebook?(state) do
-    state.data.file != nil and state.data.dirty and state.save_task_pid == nil
+    state.data.dirty and state.save_task_pid == nil
   end
 
-  defp handle_save_finished(state, result) do
+  defp notebook_autosave_file(state) do
+    file = state.data.file || default_notebook_file(state)
+    default? = state.data.file == nil
+    {file, default?}
+  end
+
+  defp default_notebook_file(state) do
+    if path = state.autosave_path || Livebook.Config.autosave_path() do
+      dir = path |> FileSystem.Utils.ensure_dir_path() |> FileSystem.File.local()
+      notebook_rel_path = default_notebook_path(state)
+      FileSystem.File.resolve(dir, notebook_rel_path)
+    end
+  end
+
+  defp default_notebook_path(state) do
+    title_str =
+      state.data.notebook.name
+      |> String.downcase()
+      |> String.replace(~r/\s+/, "_")
+      |> String.replace(~r/[^\w]/, "")
+
+    # We want a random, but deterministic part, so we
+    # use a few trailing characters from the session id,
+    # which are random already
+    random_str = String.slice(state.session_id, -4..-1)
+
+    [date_str, time_str, _] =
+      state.created_at
+      |> DateTime.to_iso8601()
+      |> String.replace(["-", ":"], "_")
+      |> String.split(["T", "."])
+
+    "#{date_str}/#{time_str}_#{title_str}_#{random_str}.livemd"
+  end
+
+  defp handle_save_finished(state, result, file, default?) do
+    state =
+      if default? do
+        if state.saved_default_file && state.saved_default_file != file do
+          FileSystem.File.remove(state.saved_default_file)
+        end
+
+        %{state | saved_default_file: file}
+      else
+        state
+      end
+
     case result do
       :ok ->
         handle_operation(state, {:mark_as_not_dirty, self()})

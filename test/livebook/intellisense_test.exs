@@ -6,12 +6,12 @@ defmodule Livebook.IntellisenseTest.Utils do
   the given block of code in a fresh context.
   """
   defmacro eval(do: block) do
-    binding = []
-    env = :elixir.env_for_eval([])
-    {_, binding, env} = :elixir.eval_quoted(block, binding, env)
-
     quote do
-      {unquote(Macro.escape(binding)), unquote(Macro.escape(env))}
+      block = unquote(Macro.escape(block))
+      binding = []
+      env = :elixir.env_for_eval([])
+      {_, binding, env} = :elixir.eval_quoted(block, binding, env)
+      {binding, env}
     end
   end
 end
@@ -35,11 +35,10 @@ defmodule Livebook.IntellisenseTest do
         Returns the length of `list`.
 
         ```
-        @spec length(list()) ::
-          non_neg_integer()
+        @spec length(list()) :: non_neg_integer()
         ```\
         """,
-        insert_text: "length"
+        insert_text: "length($0)"
       }
 
       assert length_item in Intellisense.get_completion_items("", binding, env)
@@ -111,6 +110,28 @@ defmodule Livebook.IntellisenseTest do
 
       assert lists_item in Intellisense.get_completion_items(":", binding, env)
       assert lists_item in Intellisense.get_completion_items("  :", binding, env)
+    end
+
+    @tag :erl_docs
+    test "Erlang completion doesn't include quoted atoms" do
+      {binding, env} = eval(do: nil)
+
+      assert [] = Intellisense.get_completion_items(~s{:Elixir}, binding, env)
+    end
+
+    @tag :erl_docs
+    test "Erlang module completion with 'in' operator in spec" do
+      {binding, env} = eval(do: nil)
+
+      assert [
+               %{
+                 label: "open_port/2",
+                 kind: :function,
+                 detail: ":erlang.open_port/2",
+                 documentation: _open_port_doc,
+                 insert_text: "open_port($0)"
+               }
+             ] = Intellisense.get_completion_items(":erlang.open_por", binding, env)
     end
 
     test "Elixir proxy" do
@@ -260,25 +281,13 @@ defmodule Livebook.IntellisenseTest do
 
       assert [
                %{
-                 detail: "Livebook.TestModules.Hidden.hidden()",
-                 documentation: "This is a private API",
-                 insert_text: "hidden",
-                 kind: :function,
-                 label: "hidden/0"
-               },
-               %{
                  detail: "Livebook.TestModules.Hidden.visible()",
                  documentation: "No documentation available",
-                 insert_text: "visible",
+                 insert_text: "visible()",
                  kind: :function,
                  label: "visible/0"
                }
-             ] =
-               Intellisense.get_completion_items(
-                 "Livebook.TestModules.Hidden.",
-                 binding,
-                 env
-               )
+             ] = Intellisense.get_completion_items("Livebook.TestModules.Hidden.", binding, env)
     end
 
     test "Elixir root submodule completion" do
@@ -330,7 +339,7 @@ defmodule Livebook.IntellisenseTest do
                  @spec version() :: String.t()
                  ```\
                  """,
-                 insert_text: "version"
+                 insert_text: "version()"
                }
              ] = Intellisense.get_completion_items("System.ve", binding, env)
     end
@@ -387,11 +396,11 @@ defmodule Livebook.IntellisenseTest do
 
                ```
                @spec gzip(data) :: compressed
-               when data: iodata(),
-                    compressed: binary()
+                     when data: iodata(),
+                          compressed: binary()
                ```\
                """,
-               insert_text: "gzip"
+               insert_text: "gzip($0)"
              } in Intellisense.get_completion_items(":zlib.gz", binding, env)
     end
 
@@ -410,7 +419,7 @@ defmodule Livebook.IntellisenseTest do
                @spec concat(t()) :: t()
                ```\
                """,
-               insert_text: "concat"
+               insert_text: "concat($0)"
              } in Intellisense.get_completion_items("Enum.concat/", binding, env)
 
       assert [
@@ -435,7 +444,7 @@ defmodule Livebook.IntellisenseTest do
                  @spec concat(t()) :: t()
                  ```\
                  """,
-                 insert_text: "concat"
+                 insert_text: "concat($0)"
                },
                %{
                  label: "concat/2",
@@ -449,7 +458,7 @@ defmodule Livebook.IntellisenseTest do
                  @spec concat(t(), t()) :: t()
                  ```\
                  """,
-                 insert_text: "concat"
+                 insert_text: "concat($0)"
                }
              ] = Intellisense.get_completion_items("Enum.concat", binding, env)
     end
@@ -467,11 +476,10 @@ defmodule Livebook.IntellisenseTest do
                  separator.
 
                  ```
-                 @spec join(t(), String.t()) ::
-                   String.t()
+                 @spec join(t(), String.t()) :: String.t()
                  ```\
                  """,
-                 insert_text: "join"
+                 insert_text: "join($0)"
                },
                %{
                  label: "join/2",
@@ -482,11 +490,10 @@ defmodule Livebook.IntellisenseTest do
                  separator.
 
                  ```
-                 @spec join(t(), String.t()) ::
-                   String.t()
+                 @spec join(t(), String.t()) :: String.t()
                  ```\
                  """,
-                 insert_text: "join"
+                 insert_text: "join($0)"
                }
              ] = Intellisense.get_completion_items("Enum.jo", binding, env)
     end
@@ -509,73 +516,70 @@ defmodule Livebook.IntellisenseTest do
                  @spec version() :: String.t()
                  ```\
                  """,
-                 insert_text: "version"
+                 insert_text: "version()"
                }
              ] = Intellisense.get_completion_items("mod.ve", binding, env)
     end
 
-    # TODO: Enable on Elixir 1.13
+    test "operator completion" do
+      {binding, env} = eval(do: nil)
 
-    # test "operator completion" do
-    #   {binding, env} = eval(do: nil)
+      assert [
+               %{
+                 label: "++/2",
+                 kind: :function,
+                 detail: "left ++ right",
+                 documentation: """
+                 List concatenation operator. Concatenates a proper list and a term, returning a list.
 
-    #   assert [
-    #            %{
-    #              label: "++/2",
-    #              kind: :function,
-    #              detail: "left ++ right",
-    #              documentation: """
-    #              List concatenation operator. Concatenates a proper list and a term, returning a list.
+                 ```
+                 @spec list() ++ term() ::
+                         maybe_improper_list()
+                 ```\
+                 """,
+                 insert_text: "++"
+               },
+               %{
+                 label: "+/1",
+                 kind: :function,
+                 detail: "+value",
+                 documentation: """
+                 Arithmetic positive unary operator.
 
-    #              ```
-    #              @spec list() ++ term() ::
-    #                maybe_improper_list()
-    #              ```\
-    #              """,
-    #              insert_text: "++"
-    #            },
-    #            %{
-    #              label: "+/1",
-    #              kind: :function,
-    #              detail: "+value",
-    #              documentation: """
-    #              Arithmetic positive unary operator.
+                 ```
+                 @spec +integer() :: integer()
+                 @spec +float() :: float()
+                 ```\
+                 """,
+                 insert_text: "+"
+               },
+               %{
+                 label: "+/2",
+                 kind: :function,
+                 detail: "left + right",
+                 documentation: """
+                 Arithmetic addition operator.
 
-    #              ```
-    #              @spec +integer() :: integer()
-    #              @spec +float() :: float()
-    #              ```\
-    #              """,
-    #              insert_text: "+"
-    #            },
-    #            %{
-    #              label: "+/2",
-    #              kind: :function,
-    #              detail: "left + right",
-    #              documentation: """
-    #              Arithmetic addition operator.
+                 ```
+                 @spec integer() + integer() :: integer()
+                 @spec float() + float() :: float()
+                 @spec integer() + float() :: float()
+                 @spec float() + integer() :: float()
+                 ```\
+                 """,
+                 insert_text: "+"
+               }
+             ] = Intellisense.get_completion_items("+", binding, env)
 
-    #              ```
-    #              @spec integer() + integer() ::
-    #                integer()
-    #              @spec float() + float() :: float()
-    #              @spec integer() + float() :: float()
-    #              @spec float() + integer() :: float()
-    #              ```\
-    #              """,
-    #              insert_text: "+"
-    #            }
-    #          ] = Intellisense.get_completion_items("+", binding, env)
+      assert [
+               %{label: "+/1"},
+               %{label: "+/2"}
+             ] = Intellisense.get_completion_items("+/", binding, env)
 
-    #   assert [
-    #            %{label: "+/1"},
-    #            %{label: "+/2"}
-    #          ] = Intellisense.get_completion_items("+/", binding, env)
-
-    #   assert [
-    #            %{label: "++/2"}
-    #          ] = Intellisense.get_completion_items("++/", binding, env)
-    # end
+      assert [
+               %{label: "++/2"}
+             ] = Intellisense.get_completion_items("++/", binding, env)
+    end
 
     test "map atom key completion" do
       {binding, env} =
@@ -592,21 +596,21 @@ defmodule Livebook.IntellisenseTest do
                  label: "bar_1",
                  kind: :field,
                  detail: "field",
-                 documentation: ~s{```\n~r/pattern/\n```},
+                 documentation: nil,
                  insert_text: "bar_1"
                },
                %{
                  label: "bar_2",
                  kind: :field,
                  detail: "field",
-                 documentation: ~s{```\ntrue\n```},
+                 documentation: nil,
                  insert_text: "bar_2"
                },
                %{
                  label: "foo",
                  kind: :field,
                  detail: "field",
-                 documentation: ~s{```\n1\n```},
+                 documentation: nil,
                  insert_text: "foo"
                }
              ] = Intellisense.get_completion_items("map.", binding, env)
@@ -616,7 +620,7 @@ defmodule Livebook.IntellisenseTest do
                  label: "foo",
                  kind: :field,
                  detail: "field",
-                 documentation: ~s{```\n1\n```},
+                 documentation: nil,
                  insert_text: "foo"
                }
              ] = Intellisense.get_completion_items("map.f", binding, env)
@@ -642,18 +646,7 @@ defmodule Livebook.IntellisenseTest do
                  label: "nested",
                  kind: :field,
                  detail: "field",
-                 documentation: """
-                 ```
-                 %{
-                   deeply: %{
-                     bar_1: 23,
-                     bar_2: 14,
-                     foo: 1,
-                     mod: System
-                   }
-                 }
-                 ```\
-                 """,
+                 documentation: nil,
                  insert_text: "nested"
                }
              ] = Intellisense.get_completion_items("map.nest", binding, env)
@@ -663,7 +656,7 @@ defmodule Livebook.IntellisenseTest do
                  label: "foo",
                  kind: :field,
                  detail: "field",
-                 documentation: ~s{```\n1\n```},
+                 documentation: nil,
                  insert_text: "foo"
                }
              ] = Intellisense.get_completion_items("map.nested.deeply.f", binding, env)
@@ -680,7 +673,7 @@ defmodule Livebook.IntellisenseTest do
                  @spec version() :: String.t()
                  ```\
                  """,
-                 insert_text: "version"
+                 insert_text: "version()"
                }
              ] = Intellisense.get_completion_items("map.nested.deeply.mod.ve", binding, env)
 
@@ -727,7 +720,7 @@ defmodule Livebook.IntellisenseTest do
                  kind: :function,
                  detail: "Kernel.is_nil(term)",
                  documentation: "Returns `true` if `term` is `nil`, `false` otherwise.",
-                 insert_text: "is_nil"
+                 insert_text: "is_nil($0)"
                }
              ] = Intellisense.get_completion_items("Kernel.is_ni", binding, env)
     end
@@ -741,7 +734,7 @@ defmodule Livebook.IntellisenseTest do
                  kind: :function,
                  detail: "Kernel.SpecialForms.quote(opts, block)",
                  documentation: "Gets the representation of any expression.",
-                 insert_text: "quote"
+                 insert_text: "quote "
                }
              ] = Intellisense.get_completion_items("quot", binding, env)
     end
@@ -755,7 +748,7 @@ defmodule Livebook.IntellisenseTest do
                  kind: :function,
                  detail: "Kernel.put_in(path, value)",
                  documentation: "Puts a value in a nested structure via the given `path`.",
-                 insert_text: "put_in"
+                 insert_text: "put_in($0)"
                },
                %{
                  label: "put_in/3",
@@ -766,13 +759,13 @@ defmodule Livebook.IntellisenseTest do
 
                  ```
                  @spec put_in(
-                   Access.t(),
-                   [term(), ...],
-                   term()
-                 ) :: Access.t()
+                         Access.t(),
+                         [term(), ...],
+                         term()
+                       ) :: Access.t()
                  ```\
                  """,
-                 insert_text: "put_in"
+                 insert_text: "put_in($0)"
                }
              ] = Intellisense.get_completion_items("put_i", binding, env)
     end
@@ -790,7 +783,7 @@ defmodule Livebook.IntellisenseTest do
                  label: "numbats",
                  kind: :variable,
                  detail: "variable",
-                 documentation: ~s{```\n["numbat", "numbat"]\n```},
+                 documentation: nil,
                  insert_text: "numbats"
                }
              ] = Intellisense.get_completion_items("numba", binding, env)
@@ -800,14 +793,14 @@ defmodule Livebook.IntellisenseTest do
                  label: "numbats",
                  kind: :variable,
                  detail: "variable",
-                 documentation: ~s{```\n["numbat", "numbat"]\n```},
+                 documentation: nil,
                  insert_text: "numbats"
                },
                %{
                  label: "number",
                  kind: :variable,
                  detail: "variable",
-                 documentation: ~s{```\n3\n```},
+                 documentation: nil,
                  insert_text: "number"
                }
              ] = Intellisense.get_completion_items("num", binding, env)
@@ -817,7 +810,7 @@ defmodule Livebook.IntellisenseTest do
                  label: "nothing",
                  kind: :variable,
                  detail: "variable",
-                 documentation: ~s{```\nnil\n```},
+                 documentation: nil,
                  insert_text: "nothing"
                },
                %{label: "node/0"},
@@ -852,7 +845,7 @@ defmodule Livebook.IntellisenseTest do
                @spec version() :: String.t()
                ```\
                """,
-               insert_text: "version"
+               insert_text: "version()"
              } in Intellisense.get_completion_items("v", binding, env)
 
       assert [
@@ -1011,12 +1004,10 @@ defmodule Livebook.IntellisenseTest do
 
                ```
                @spec max(list) :: max
-               when list: [t, ...],
-                    max: t,
-                    t: term()
+                     when list: [t, ...], max: t, t: term()
                ```\
                """,
-               insert_text: "max"
+               insert_text: "max($0)"
              } in Intellisense.get_completion_items("EList.", binding, env)
 
       assert [] = Intellisense.get_completion_items("EList.Invalid", binding, env)
@@ -1115,6 +1106,54 @@ defmodule Livebook.IntellisenseTest do
       {binding, env} = eval(do: nil)
       assert [] = Intellisense.get_completion_items("@attr.value", binding, env)
     end
+
+    test "includes language keywords" do
+      {binding, env} = eval(do: nil)
+
+      assert [
+               %{
+                 label: "do",
+                 kind: :keyword,
+                 detail: "do-end block",
+                 documentation: nil,
+                 insert_text: "do\n  $0\nend"
+               }
+               | _
+             ] = Intellisense.get_completion_items("do", binding, env)
+    end
+
+    test "includes space instead of parentheses for def* macros" do
+      {binding, env} = eval(do: nil)
+
+      assert [
+               %{
+                 label: "defmodule/2",
+                 insert_text: "defmodule "
+               }
+             ] = Intellisense.get_completion_items("defmodu", binding, env)
+    end
+
+    test "includes space instead of parentheses for keyword macros" do
+      {binding, env} = eval(do: nil)
+
+      assert [
+               %{
+                 label: "import/2",
+                 insert_text: "import "
+               }
+             ] = Intellisense.get_completion_items("impor", binding, env)
+    end
+
+    test "includes doesn't include space nor parentheses for macros like __ENV__" do
+      {binding, env} = eval(do: nil)
+
+      assert [
+               %{
+                 label: "__ENV__/0",
+                 insert_text: "__ENV__"
+               }
+             ] = Intellisense.get_completion_items("__EN", binding, env)
+    end
   end
 
   describe "get_details/3" do
@@ -1185,6 +1224,301 @@ defmodule Livebook.IntellisenseTest do
                Intellisense.get_details("to_string(1)", 3, binding, env)
 
       assert to_string_fn =~ "Converts the argument to a string"
+    end
+  end
+
+  describe "get_signature_items/3" do
+    test "returns nil when outside call" do
+      {binding, env} = eval(do: nil)
+
+      assert nil == Intellisense.get_signature_items("length()", binding, env)
+    end
+
+    test "returns nil if there are no matches" do
+      {binding, env} = eval(do: nil)
+
+      assert nil == Intellisense.get_signature_items("Unknown.unknown(", binding, env)
+      assert nil == Intellisense.get_signature_items("Enum.concat(x, y,", binding, env)
+    end
+
+    test "supports remote function calls" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "map(enumerable, fun)",
+                   arguments: ["enumerable", "fun"],
+                   documentation: """
+                   Returns a list where each element is the result of invoking
+                   `fun` on each corresponding element of `enumerable`.
+
+                   ---
+
+                   ```
+                   @spec map(t(), (element() -> any())) ::
+                           list()
+                   ```\
+                   """
+                 }
+               ]
+             } = Intellisense.get_signature_items("Enum.map(", binding, env)
+    end
+
+    test "supports local function calls" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "length(list)",
+                   arguments: ["list"],
+                   documentation: """
+                   Returns the length of `list`.
+
+                   ---
+
+                   ```
+                   @spec length(list()) :: non_neg_integer()
+                   ```\
+                   """
+                 }
+               ]
+             } = Intellisense.get_signature_items("length(", binding, env)
+    end
+
+    test "supports manually imported functions and macros" do
+      {binding, env} =
+        eval do
+          import Enum
+          import Protocol
+        end
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "map(enumerable, fun)",
+                   arguments: ["enumerable", "fun"],
+                   documentation: _map_doc
+                 }
+               ]
+             } = Intellisense.get_signature_items("map(", binding, env)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: ~S"derive(protocol, module, options \\ [])",
+                   arguments: ["protocol", "module", ~S"options \\ []"],
+                   documentation: _derive_doc
+                 }
+               ]
+             } = Intellisense.get_signature_items("derive(", binding, env)
+    end
+
+    test "supports remote function calls on aliases" do
+      {binding, env} =
+        eval do
+          alias Enum, as: MyEnum
+        end
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "map(enumerable, fun)",
+                   arguments: ["enumerable", "fun"],
+                   documentation: _map_doc
+                 }
+               ]
+             } = Intellisense.get_signature_items("MyEnum.map(", binding, env)
+    end
+
+    test "supports anonymous function calls" do
+      {binding, env} =
+        eval do
+          add = fn x, y -> x + y end
+        end
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "add.(arg1, arg2)",
+                   arguments: ["arg1", "arg2"],
+                   documentation: """
+                   No documentation available\
+                   """
+                 }
+               ]
+             } = Intellisense.get_signature_items("add.(", binding, env)
+    end
+
+    test "supports captured remote function calls" do
+      {binding, env} =
+        eval do
+          map = &Enum.map/2
+        end
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "map(enumerable, fun)",
+                   arguments: ["enumerable", "fun"],
+                   documentation: _map_doc
+                 }
+               ]
+             } = Intellisense.get_signature_items("map.(", binding, env)
+    end
+
+    @tag :erl_docs
+    test "shows signature with arguments for erlang modules" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "map(fun, list1)",
+                   arguments: ["fun", "list1"],
+                   documentation: _map_doc
+                 }
+               ]
+             } = Intellisense.get_signature_items(":lists.map(", binding, env)
+    end
+
+    test "returns call active argument" do
+      {binding, env} = eval(do: nil)
+
+      assert %{active_argument: 0, signature_items: [_item]} =
+               Intellisense.get_signature_items("Enum.map([1, ", binding, env)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items("Enum.map([1, 2], ", binding, env)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items("Enum.map([1, 2], fn", binding, env)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items(
+                 "Enum.map([1, 2], fn x -> x * x end",
+                 binding,
+                 env
+               )
+
+      assert %{active_argument: 2, signature_items: [_item]} =
+               Intellisense.get_signature_items("IO.ANSI.color(1, 2, 3", binding, env)
+    end
+
+    test "returns correct active argument when using pipe operator" do
+      {binding, env} = eval(do: nil)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items("[1, 2] |> Enum.map(", binding, env)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items("[1, 2] |> Enum.map(fn", binding, env)
+
+      assert %{active_argument: 1, signature_items: [_item]} =
+               Intellisense.get_signature_items(
+                 "[1, 2] |> Enum.map(fn x -> x * x end",
+                 binding,
+                 env
+               )
+
+      assert %{active_argument: 2, signature_items: [_item]} =
+               Intellisense.get_signature_items("1 |> IO.ANSI.color(2, 3", binding, env)
+    end
+
+    test "returns a single signature for fnuctions with default arguments" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: ~S"to_string(integer, base \\ 10)",
+                   arguments: ["integer", ~S"base \\ 10"],
+                   documentation: """
+                   Returns a binary which corresponds to the text representation
+                   of `integer` in the given `base`.
+
+                   ---
+
+                   ```
+                   @spec to_string(integer(), 2..36) ::
+                           String.t()
+                   ```\
+                   """
+                 }
+               ]
+             } = Intellisense.get_signature_items("Integer.to_string(", binding, env)
+    end
+
+    test "returns multiple signatures for function with multiple arities" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   signature: "concat(enumerables)",
+                   arguments: ["enumerables"],
+                   documentation: _concat_1_docs
+                 },
+                 %{
+                   signature: "concat(left, right)",
+                   arguments: ["left", "right"],
+                   documentation: _concat_2_docs
+                 }
+               ]
+             } = Intellisense.get_signature_items("Enum.concat(", binding, env)
+    end
+
+    test "returns only signatures where active argument is at valid position" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 1,
+               signature_items: [
+                 %{
+                   signature: "concat(left, right)",
+                   arguments: ["left", "right"],
+                   documentation: _concat_1_docs
+                 }
+               ]
+             } = Intellisense.get_signature_items("Enum.concat([1, 2], ", binding, env)
+    end
+
+    test "does not return any signatures when in do-end block" do
+      {binding, env} = eval(do: nil)
+
+      assert nil == Intellisense.get_signature_items("if true do ", binding, env)
+    end
+
+    test "does not return any signatures for module attributes" do
+      {binding, env} = eval(do: nil)
+
+      assert nil == Intellisense.get_signature_items("@length(", binding, env)
+    end
+
+    test "does not returns signatures for calls in attribute value" do
+      {binding, env} = eval(do: nil)
+
+      assert %{
+               active_argument: 0,
+               signature_items: [
+                 %{
+                   arguments: ["list"],
+                   documentation: _length_doc,
+                   signature: "length(list)"
+                 }
+               ]
+             } = Intellisense.get_signature_items("@attr length(", binding, env)
     end
   end
 end

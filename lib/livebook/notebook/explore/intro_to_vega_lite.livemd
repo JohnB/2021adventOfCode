@@ -5,13 +5,13 @@
 To render graphs in Livebook, we need the
 [`vega_lite`](https://github.com/elixir-nx/vega_lite) package
 for defining our graph specification and
-[`kino`](https://github.com/elixir-nx/kino), which augments
-Livebook with client-driven interactive widgets:
+[`kino`](https://github.com/elixir-nx/kino). We won't use Kino
+directly, but it is required to render VegaLite:
 
 ```elixir
 Mix.install([
   {:vega_lite, "~> 0.1.2"},
-  {:kino, "~> 0.3.1"}
+  {:kino, "~> 0.4.1"}
 ])
 ```
 

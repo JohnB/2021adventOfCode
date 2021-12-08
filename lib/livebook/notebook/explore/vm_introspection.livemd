@@ -14,7 +14,7 @@ so let's add `:vega_lite` and `:kino` for that.
 ```elixir
 Mix.install([
   {:vega_lite, "~> 0.1.2"},
-  {:kino, "~> 0.3.1"}
+  {:kino, "~> 0.4.1"}
 ])
 ```
 
@@ -48,24 +48,26 @@ IO.puts node()
 IO.puts Node.get_cookie()
 ```
 
-Now, paste these in the inputs below:
+Now render the inputs below:
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Node","type":"text","value":""} -->
+```elixir
+node_input = Kino.Input.text("Node")
+cookie_input = Kino.Input.text("Cookie")
+```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Cookie","type":"text","value":""} -->
+And paste the node name and the cookie value from the other node inside.
 
-And now execute the code cell below, which will read the inputs,
-configure the cookie, and connect to the other notebook:
+Now let's read the inputs, configure the cookie, and connect to the other notebook:
 
 ```elixir
 node =
-  IO.gets("Node: ")
-  |> String.trim()
+  node_input
+  |> Kino.Input.read()
   |> String.to_atom()
 
 cookie =
-  IO.gets("Cookie: ")
-  |> String.trim()
+  cookie_input
+  |> Kino.Input.read()
   |> String.to_atom()
 
 Node.set_cookie(node, cookie)
@@ -163,7 +165,7 @@ widget =
     |> Vl.encode(:color, datum: [repeat: :layer], type: :nominal)
   )
   |> Kino.VegaLite.new()
-  |> tap(&Kino.render/1)
+  |> Kino.render()
 
 Kino.VegaLite.periodically(widget, 200, 1, fn i ->
   point =

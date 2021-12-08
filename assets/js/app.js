@@ -18,12 +18,14 @@ import FocusOnUpdate from "./focus_on_update";
 import ScrollOnUpdate from "./scroll_on_update";
 import VirtualizedLines from "./virtualized_lines";
 import UserForm from "./user_form";
+import EditorSettings from "./editor_settings";
 import VegaLite from "./vega_lite";
 import Timer from "./timer";
 import MarkdownRenderer from "./markdown_renderer";
 import Highlight from "./highlight";
-import DragAndDrop from "./darg_and_drop";
+import DragAndDrop from "./drag_and_drop";
 import PasswordToggle from "./password_toggle";
+import KeyboardControl from "./keyboard_control";
 import morphdomCallbacks from "./morphdom_callbacks";
 import { loadUserData } from "./lib/user";
 
@@ -35,12 +37,14 @@ const hooks = {
   ScrollOnUpdate,
   VirtualizedLines,
   UserForm,
+  EditorSettings,
   VegaLite,
   Timer,
   MarkdownRenderer,
   Highlight,
   DragAndDrop,
   PasswordToggle,
+  KeyboardControl,
 };
 
 const csrfToken = document
