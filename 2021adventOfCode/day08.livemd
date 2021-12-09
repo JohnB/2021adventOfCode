@@ -34,6 +34,10 @@ input_day = Kino.Input.number("Day")
 input_p1example = Kino.Input.textarea("Example Data")
 ```
 
+```elixir
+input_p2example = Kino.Input.textarea("Part 2 Example Data")
+```
+
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
@@ -43,15 +47,21 @@ input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-input_source_select =
-  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+input_source_select3 =
+  Kino.Input.select("Source", [
+    {:example, "example"},
+    {:example2, "example2"},
+    {:puzzle_input, "puzzle input"}
+  ])
 ```
 
 ```elixir
 p1data = fn ->
-  (Kino.Input.read(input_source_select) == :example &&
-     Kino.Input.read(input_p1example)) ||
-    Kino.Input.read(input_p1puzzleInput)
+  case Kino.Input.read(input_source_select3) do
+    :example -> Kino.Input.read(input_p1example)
+    :example2 -> Kino.Input.read(input_p2example)
+    _ -> Kino.Input.read(input_p1puzzleInput)
+  end
 end
 ```
 
@@ -141,7 +151,7 @@ In the output values, how many times do digits 1, 4, 7, or 8 appear?
 
 ```elixir
 lines =
-  Kino.Input.read(input_p1example)
+  p1data.()
   |> AOC.as_single_lines()
 
 part1answer =
@@ -156,150 +166,389 @@ part1answer =
   |> Enum.filter(fn len -> len in [2, 3, 4, 7] end)
   |> Enum.count()
 
-# IO.puts("Part 1 Solution: #{part1answer}")
+# 387
+IO.puts("Part 1 Solution: #{part1answer}")
+```
 
+```output
+Part 1 Solution: 387
+```
+
+```output
+:ok
+```
+
+## Part 2 (maybe solved above)
+
+Through a little deduction, you should now be able to determine the remaining digits. Consider again the first example above:
+
+```
+acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab |
+cdfeb fcadb cdfeb cdbaf
+```
+
+After some careful analysis, the mapping between signal wires and segments only make sense in the following configuration:
+
+```
+ dddd
+e    a
+e    a
+ ffff
+g    b
+g    b
+ cccc
+```
+
+So, the unique signal patterns would correspond to the following digits:
+
+```
+acedgfb: 8
+cdfbe: 5
+gcdfa: 2
+fbcad: 3
+dab: 7
+cefabd: 9
+cdfgeb: 6
+eafb: 4
+cagedb: 0
+ab: 1
+```
+
+Then, the four digits of the output value can be decoded:
+
+```
+cdfeb: 5
+fcadb: 3
+cdfeb: 5
+cdbaf: 3
+```
+
+Therefore, the output value for this entry is 5353.
+
+Following this same process for each entry in the second, larger example above, the output value of each entry can be determined:
+
+```
+fdgacbe cefdb cefbgd gcbe: 8394
+fcgedb cgb dgebacf gc: 9781
+cg cg fdcagb cbg: 1197
+efabcd cedba gadfec cb: 9361
+gecf egdcabf bgf bfgea: 4873
+gebdcfa ecba ca fadegcb: 8418
+cefg dcbef fcge gbcadfe: 4548
+ed bcgafe cdgba cbgef: 1625
+gbdfcae bgc cg cgb: 8717
+fgae cfgab fg bagce: 4315
+```
+
+Adding all of the output values in this larger example produces 61229.
+
+For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
+
+```elixir
+as_array = fn str -> String.split(str, "", trim: true) end
+
+# The signals and segments are in random orders, so this
+# alphabetizes them for consistency.
 str_sort = fn chunk ->
   chunk
   |> String.split(~r/\W/, trim: true)
   |> Enum.map(fn str ->
     str
-    |> String.split("", trim: true)
+    |> as_array.()
     |> Enum.sort()
     |> Enum.join()
   end)
-  |> Enum.sort_by(&byte_size/1)
 end
-
-# Map displayed segments to a number
 
 # This list will be ordered 174xxxyyy8
 # with xxx being a 235 combination
 # and yyy being a 069 combination
 ready_to_interpret =
   lines
-  # |> IO.inspect()
   |> Enum.map(fn line ->
     [signals, outputs] = String.split(line, "|")
-    [str_sort.(signals), str_sort.(outputs)]
+    [str_sort.(signals) |> Enum.sort_by(&byte_size/1), str_sort.(outputs)]
   end)
 
-ready_to_interpret
-|> Enum.reduce(0, fn [signals, outputs], acc ->
-  one = Enum.at(signals, 0)
-  seven = Enum.at(signals, 1)
-  four = Enum.at(signals, 2)
-  twothreefive = Enum.slice(signals, 3..5)
-  zerosixnine = Enum.slice(signals, 6..8)
-  eight = Enum.at(signals, 9)
+part2answer =
+  ready_to_interpret
+  |> Enum.reduce(0, fn [signals, outputs], acc ->
+    # IO.inspect(signals)
+    one = Enum.at(signals, 0)
+    seven = Enum.at(signals, 1)
+    four = Enum.at(signals, 2)
+    twothreefive = Enum.slice(signals, 3..5)
+    zerosixnine = Enum.slice(signals, 6..8)
+    eight = Enum.at(signals, 9)
 
-  [segment_a] = String.split(seven, "", trim: true) -- String.split(one, "", trim: true)
-  four_a = String.split(four, "", trim: true) ++ [segment_a]
-  IO.inspect([one, seven, four, four_a, zerosixnine, segment_a, four_a])
+    [segment_a] = as_array.(seven) -- as_array.(one)
+    four_a = as_array.(four) ++ [segment_a]
+    # IO.inspect([one, seven, four, four_a, zerosixnine, segment_a, four_a])
+    nine =
+      zerosixnine
+      |> Enum.find(fn maybe_nine ->
+        1 == Enum.count(as_array.(maybe_nine) -- four_a)
+      end)
 
-  nine =
-    zerosixnine
-    |> Enum.find(fn maybe_nine ->
-      1 == Enum.count(String.split(maybe_nine, "", trim: true) -- four_a)
-    end)
+    zerosix = zerosixnine -- [nine]
 
-  zerosix = zerosixnine -- [nine]
+    zero =
+      zerosix
+      |> Enum.find(fn maybe_zero ->
+        4 == Enum.count(as_array.(maybe_zero) -- as_array.(one))
+      end)
 
-  zero =
-    zerosix
-    |> Enum.find(fn maybe_zero ->
-      4 ==
-        Enum.count(
-          String.split(maybe_zero, "", trim: true) --
-            String.split(one, "", trim: true)
-        )
-    end)
+    [six] = zerosix -- [zero]
 
-  [six] = zerosix -- [zero]
+    three =
+      twothreefive
+      |> Enum.find(fn maybe_three ->
+        3 == Enum.count(as_array.(maybe_three) -- as_array.(one))
+      end)
 
-  three =
-    twothreefive
-    |> Enum.find(fn maybe_three ->
-      3 ==
-        Enum.count(
-          String.split(maybe_three, "", trim: true) --
-            String.split(one, "", trim: true)
-        )
-    end)
+    twofive = twothreefive -- [three]
+    [segment_c] = as_array.(one) -- as_array.(one) -- as_array.(six)
+    # IO.inspect([acc, one, six, twofive, three, eight, outputs, segment_a, segment_c])
+    # 2 acdeg - contains c
+    # But this find() then is backwards - but works!?!
+    two =
+      twofive
+      |> Enum.find(fn maybe_two -> segment_c not in as_array.(maybe_two) end)
 
-  # 2 acdeg - contains c
-  # 5 abdfg - contains f
-  [acc, twothreefive, three, eight, outputs, segment_a]
-end)
+    [five] = twofive -- [two]
+
+    key = %{
+      zero => 0,
+      one => 1,
+      two => 2,
+      three => 3,
+      four => 4,
+      five => 5,
+      six => 6,
+      seven => 7,
+      eight => 8,
+      nine => 9
+    }
+
+    num =
+      Enum.map(outputs, fn output -> key[output] end)
+      |> Enum.join()
+      |> String.to_integer()
+
+    IO.inspect(outputs, label: "#{num}")
+    acc + num
+  end)
+
+# 986034
+IO.puts("Part 2 Solution: #{part2answer}")
 ```
 
 ```output
-warning: variable "six" is unused (if the variable is not meant to be used, prefix it with an underscore)
-  2021adventOfCode/day08.livemd#cell:67
-
-[
-  "ab",
-  "abd",
-  "abef",
-  ["a", "b", "e", "f", "d"],
-  ["abcdef", "bcdefg", "abcdeg"],
-  "d",
-  ["a", "b", "e", "f", "d"]
-]
+5908: ["acdef", "abcdef", "bcdefg", "abcdefg"]
+7387: ["cdf", "abcdf", "abcdefg", "cdf"]
+5637: ["bcdef", "abcdef", "bcdfg", "bcg"]
+4038: ["adef", "abcdeg", "abefg", "abcdefg"]
+5988: ["bcdef", "abcdef", "abcdefg", "abcdefg"]
+2448: ["acefg", "bcdf", "bcdf", "abcdefg"]
+3182: ["abcdg", "bd", "abcdefg", "abcfg"]
+7161: ["efg", "eg", "abcdfg", "eg"]
+7795: ["abe", "abe", "abcefg", "acefg"]
+9844: ["abcdeg", "abcdefg", "adeg", "adeg"]
+8461: ["abcdefg", "bdef", "abcdeg", "df"]
+5611: ["abcdf", "abcdef", "ag", "ag"]
+5487: ["acdeg", "cefg", "abcdefg", "acf"]
+8472: ["abcdefg", "adef", "cdf", "abcdg"]
+3035: ["abdef", "bcdefg", "abdef", "abcde"]
+1484: ["eg", "abeg", "abcdefg", "abeg"]
+3843: ["cdefg", "abcdefg", "bcdg", "cdefg"]
+4588: ["acdg", "abcfg", "abcdefg", "abcdefg"]
+5971: ["cdefg", "acdefg", "ace", "ac"]
+6195: ["abcdeg", "cf", "acdefg", "acdeg"]
+161: ["bcdefg", "de", "abcefg", "de"]
+8730: ["abcdefg", "acg", "acdfg", "abcefg"]
+6096: ["abcdfg", "abcdeg", "acdefg", "abcdfg"]
+4128: ["bcef", "bc", "abdeg", "abcdefg"]
+1435: ["bf", "bdfg", "abdef", "adefg"]
+1681: ["bg", "abcdef", "abcdefg", "bg"]
+1527: ["dg", "abefg", "abcde", "bdg"]
+6061: ["abdefg", "abcdeg", "abdefg", "cd"]
+3774: ["acdef", "aef", "aef", "adfg"]
+6447: ["abcdeg", "bdef", "bdef", "cef"]
+4664: ["bcdf", "abdefg", "abdefg", "bcdf"]
+1106: ["be", "be", "abcdef", "abcdfg"]
+9465: ["abcefg", "bcfg", "acdefg", "acefg"]
+3104: ["abdef", "be", "bcdefg", "abeg"]
+4148: ["cefg", "cf", "cefg", "abcdefg"]
+9406: ["abcdeg", "abdg", "bcdefg", "abcefg"]
+8711: ["abcdefg", "acd", "cd", "cd"]
+2408: ["bcefg", "adfg", "abcdef", "abcdefg"]
+2857: ["acdfg", "abcdefg", "abdef", "aeg"]
+454: ["abcdef", "acdg", "bcdeg", "acdg"]
+2762: ["abcdf", "ade", "abcefg", "abcdf"]
+9161: ["acdefg", "ef", "abcdfg", "ef"]
+3196: ["abefg", "be", "abdefg", "acdefg"]
+4844: ["cdfg", "abcdefg", "cdfg", "cdfg"]
+1287: ["ce", "adefg", "abcdefg", "cef"]
+4492: ["defg", "defg", "acdefg", "abceg"]
+5425: ["bdefg", "cdfg", "abcde", "bdefg"]
+7878: ["aeg", "abcdefg", "aeg", "abcdefg"]
+5421: ["abcdg", "abcf", "cdefg", "af"]
+2858: ["abcde", "abcdefg", "abcfg", "abcdefg"]
+8479: ["abcdefg", "bdfg", "beg", "abdefg"]
+2764: ["abcdf", "cde", "abcefg", "adeg"]
+4798: ["aefg", "cef", "acdefg", "abcdefg"]
+7546: ["bfg", "cdefg", "bdeg", "acdefg"]
+2284: ["abefg", "abefg", "abcdefg", "acde"]
+2883: ["abcef", "abcdefg", "abcdefg", "abdef"]
+5451: ["bcdeg", "abce", "bcdeg", "ac"]
+5088: ["abdef", "abcefg", "abcdefg", "abcdefg"]
+8162: ["abcdefg", "bc", "acdefg", "abdef"]
+8901: ["abcdefg", "abdefg", "acdefg", "eg"]
+8741: ["abcdefg", "bdf", "cdfg", "df"]
+929: ["acdefg", "abdefg", "abcdg", "abdefg"]
+1071: ["ab", "abcdeg", "abd", "ab"]
+1930: ["bc", "bcdefg", "bcdeg", "abcdfg"]
+3650: ["abefg", "bcdefg", "bdefg", "abcdeg"]
+3953: ["acdef", "abcdef", "abcde", "acdef"]
+1668: ["cd", "abcefg", "abcefg", "abcdefg"]
+7281: ["bef", "bcdeg", "abcdefg", "bf"]
+410: ["acdefg", "bdfg", "dg", "acdefg"]
+7975: ["bef", "bcdefg", "bef", "cdefg"]
+3667: ["abcfg", "bcdefg", "bcdefg", "afg"]
+6661: ["abdefg", "abdefg", "abdefg", "cd"]
+6706: ["abdefg", "abc", "abcdeg", "abdefg"]
+8857: ["abcdefg", "abcdefg", "acefg", "abe"]
+4268: ["adeg", "abcfg", "abcdef", "abcdefg"]
+3018: ["cdefg", "abcdeg", "dg", "abcdefg"]
+4048: ["abcg", "bcdefg", "abcg", "abcdefg"]
+5680: ["abcef", "abcdef", "abcdefg", "acdefg"]
+9489: ["bcdefg", "cdef", "abcdefg", "bcdefg"]
+8639: ["abcdefg", "bcdefg", "abcef", "abcefg"]
+1007: ["fg", "abcdfg", "abcdfg", "bfg"]
+5258: ["abcde", "bdefg", "abcde", "abcdefg"]
+6088: ["abcdfg", "acdefg", "abcdefg", "abcdefg"]
+1329: ["be", "bcdeg", "cdefg", "abcdeg"]
+7763: ["bcg", "bcg", "acdefg", "bcdeg"]
+720: ["abdefg", "def", "acdfg", "abdefg"]
+2968: ["bcdeg", "abcdfg", "acdefg", "abcdefg"]
+2234: ["abcde", "abcde", "bcdeg", "cefg"]
+458: ["acdefg", "abcg", "bcdeg", "abcdefg"]
+7330: ["def", "bdefg", "bdefg", "acdefg"]
+5886: ["bdefg", "abcdefg", "abcdefg", "abdefg"]
+9181: ["bcdefg", "cg", "abcdefg", "cg"]
+6438: ["abcdef", "befg", "bcdeg", "abcdefg"]
+9094: ["bcdefg", "abcdef", "bcdefg", "bcfg"]
+6764: ["abcdfg", "ade", "abcdfg", "bdef"]
+5771: ["abcef", "cfg", "cfg", "cg"]
+3354: ["abcde", "abcde", "acdeg", "abdg"]
+3417: ["bcdef", "abde", "be", "bef"]
+3891: ["bcdeg", "abcdefg", "bcdefg", "dg"]
+3153: ["cdefg", "de", "acdfg", "cdefg"]
+3584: ["abceg", "abdeg", "abcdefg", "bcde"]
+1843: ["de", "abcdefg", "bdef", "bcdeg"]
+2623: ["acdfg", "abcefg", "acdfg", "abdfg"]
+2446: ["bcefg", "abdg", "abdg", "abcdef"]
+7652: ["ade", "abcefg", "acefg", "bcdef"]
+2767: ["abdfg", "ade", "abcefg", "ade"]
+3688: ["abdfg", "abcdeg", "abcdefg", "abcdefg"]
+9854: ["abcdfg", "abcdefg", "abdfg", "bcfg"]
+724: ["abcdef", "abc", "acdfg", "bceg"]
+2483: ["bcdeg", "abdf", "abcdefg", "abcde"]
+6336: ["abcdfg", "bcefg", "bcefg", "abcdfg"]
+5834: ["bcefg", "abcdefg", "abcef", "acfg"]
+8104: ["abcdefg", "bf", "abcdef", "bdfg"]
+2662: ["bcdef", "acdefg", "acdefg", "bcdef"]
+851: ["acdefg", "abcdefg", "bdefg", "af"]
+1225: ["bd", "bcefg", "bcefg", "adefg"]
+6051: ["abdefg", "abcefg", "abdfg", "cg"]
+8240: ["abcdefg", "bdefg", "acdf", "abcefg"]
+4584: ["bcfg", "cdefg", "abcdefg", "bcfg"]
+5200: ["abdef", "bcefg", "abcdeg", "abcdeg"]
+9496: ["abcdfg", "acdg", "abcdfg", "abcefg"]
+7208: ["bcf", "abdef", "abcefg", "abcdefg"]
+8826: ["abcdefg", "abcdefg", "acefg", "abcdeg"]
+6150: ["acdefg", "bf", "acdfg", "abcdef"]
+7326: ["efg", "abefg", "abdef", "abcdeg"]
+2288: ["abcde", "abcde", "abcdefg", "abcdefg"]
+4386: ["abdf", "adefg", "abcdefg", "abcefg"]
+8244: ["abcdefg", "abdfg", "cdef", "cdef"]
+9371: ["acdefg", "adefg", "efg", "eg"]
+1117: ["be", "be", "be", "bef"]
+1114: ["ce", "ce", "ce", "bceg"]
+1824: ["eg", "abcdefg", "abcde", "defg"]
+4519: ["abeg", "acdeg", "bg", "abcdeg"]
+380: ["abdefg", "acdeg", "abcdefg", "abdefg"]
+3731: ["bdefg", "beg", "bdefg", "eg"]
+9594: ["abcdfg", "abcdf", "abcdfg", "abdg"]
+8415: ["abcdefg", "adeg", "ad", "acefg"]
+4131: ["acef", "ce", "bcefg", "ce"]
+3416: ["abdfg", "bdeg", "dg", "abcdef"]
+4554: ["aceg", "acdfg", "acdfg", "aceg"]
+3534: ["abdeg", "acdeg", "abdeg", "abce"]
+2938: ["bcdeg", "abcefg", "abceg", "abcdefg"]
+7483: ["bcd", "bcef", "abcdefg", "abcdf"]
+8736: ["abcdefg", "cfg", "abcfg", "abcdeg"]
+1628: ["ab", "bcdefg", "adefg", "abcdefg"]
+5950: ["abcfg", "abcdfg", "abcfg", "abdefg"]
+9265: ["abcdeg", "abcef", "abcdfg", "abcdg"]
+2811: ["bdefg", "abcdefg", "cf", "cf"]
+2097: ["abdfg", "bcdefg", "abcefg", "bcf"]
+9686: ["abdefg", "bcdefg", "abcdefg", "bcdefg"]
+1527: ["ac", "bcdeg", "abdfg", "abc"]
+8747: ["abcdefg", "ace", "adef", "ace"]
+9665: ["abcdeg", "acdefg", "acdefg", "acdeg"]
+4378: ["adfg", "acdeg", "aeg", "abcdefg"]
+758: ["acdefg", "adg", "abefg", "abcdefg"]
+2971: ["abcef", "abcdeg", "bde", "de"]
+2172: ["abdfg", "be", "beg", "abdfg"]
+2724: ["abcef", "aeg", "abcef", "abdg"]
+1890: ["cf", "abcdefg", "bcdefg", "abcdfg"]
+8411: ["abcdefg", "bceg", "bg", "bg"]
+3492: ["abcde", "aceg", "abcdeg", "bcdef"]
+6214: ["abcdfg", "abdeg", "ef", "cefg"]
+9499: ["acdefg", "aefg", "acdefg", "acdefg"]
+2221: ["cdefg", "cdefg", "cdefg", "bd"]
+7251: ["aeg", "bcefg", "abdfg", "ae"]
+1499: ["ag", "abdg", "abcdfg", "abcdfg"]
+1437: ["cg", "acfg", "bcefg", "bcg"]
+8871: ["abcdefg", "abcdefg", "bce", "be"]
+4443: ["abdg", "abdg", "abdg", "abceg"]
+611: ["abdefg", "acdefg", "ab", "ab"]
+5549: ["acefg", "acefg", "acdf", "acdefg"]
+4155: ["bdef", "bd", "adefg", "adefg"]
+2465: ["bcdfg", "abef", "acdefg", "adefg"]
+7496: ["cef", "bcdf", "bcdefg", "abcdeg"]
+9296: ["abcdfg", "acefg", "abcdfg", "bcdefg"]
+138: ["bcdefg", "cd", "abcdg", "abcdefg"]
+985: ["bcdefg", "abcdfg", "abcdefg", "abcdg"]
+3414: ["bcdef", "abef", "ef", "abef"]
+6182: ["acdefg", "bc", "abcdefg", "bdefg"]
+9406: ["abcefg", "acef", "bcdefg", "abcdeg"]
+8317: ["abcdefg", "abdef", "ef", "aef"]
+5370: ["bcdfg", "abcdg", "abg", "abdefg"]
+9993: ["abcefg", "abcefg", "abcefg", "acefg"]
+7099: ["bdg", "abcdfg", "bcdefg", "bcdefg"]
+8378: ["abcdefg", "abdfg", "abd", "abcdefg"]
+1747: ["cg", "cfg", "bcdg", "cfg"]
+3248: ["abefg", "abdef", "abcg", "abcdefg"]
+4092: ["bcdf", "abcdeg", "abcdfg", "adefg"]
+4604: ["aefg", "abcdef", "abcdfg", "aefg"]
+1040: ["de", "abdefg", "acde", "abdefg"]
+7738: ["ceg", "ceg", "abceg", "abcdefg"]
+9465: ["bcdefg", "defg", "abcdeg", "bcdeg"]
+24: ["abcefg", "abcefg", "abcde", "defg"]
+5212: ["abcef", "acdeg", "bd", "acdeg"]
+6930: ["bcdefg", "abcdeg", "abcdg", "acdefg"]
+1818: ["af", "abcdefg", "af", "abcdefg"]
+4442: ["acde", "acde", "acde", "bdefg"]
+8132: ["abcdefg", "bd", "bdefg", "adefg"]
+4845: ["cdfg", "abcdefg", "cdfg", "abcfg"]
+5381: ["acdeg", "abcde", "abcdefg", "be"]
+Part 2 Solution: 986034
 ```
 
 ```output
-[0, ["bcdef", "acdfg", "abcdf"], "abcdf", "abcdefg", ["bcdef", "abcdf", "bcdef", "abcdf"], "d"]
-```
-
-```
-1 cf
-7 acf
-4 bcdf
-8 abcdefg
-  a = 7 - 1
-9 abcdfg - subtract 4a to get the g segment
-0 abcefg - includes 1
-6 abdefg - not 9 or 0, and has half of 1, separating c from f
-3 acdfg - contains 7, to get dg (and thus d)
-2 acdeg - contains c
-5 abdfg - contains f
-
-  0:      1:      2:      3:      4:
- aaaa    ....    aaaa    aaaa    ....
-b    c  .    c  .    c  .    c  b    c
-b    c  .    c  .    c  .    c  b    c
- ....    ....    dddd    dddd    dddd
-e    f  .    f  e    .  .    f  .    f
-e    f  .    f  e    .  .    f  .    f
- gggg    ....    gggg    gggg    ....
-
-  5:      6:      7:      8:      9:
- aaaa    aaaa    aaaa    aaaa    aaaa
-b    .  b    .  .    c  b    c  b    c
-b    .  b    .  .    c  b    c  b    c
- dddd    dddd    ....    dddd    dddd
-.    f  e    f  .    f  e    f  .    f
-.    f  e    f  .    f  e    f  .    f
- gggg    gggg    ....    gggg    gggg
-```
-
-## Part 2 (maybe solved above)
-
-### part 2 title here
-
-* Add part 2 puzzle instructions here
-
-```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
-end
-
-AOC.p1data()
-# 4873
-|> score.()
+:ok
 ```
 
 ### Epilogue
