@@ -1,0 +1,191 @@
+<!-- vim: syntax=markdown -->
+
+# Day 9
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### Day 9: Smoke Basin ---
+
+These caves seem to be lava tubes. Parts are even still volcanically active; small hydrothermal vents release smoke into the caves that slowly settles like rain.
+
+If you can model how the smoke flows through the caves, you might be able to avoid it and be that much safer. The submarine generates a heightmap of the floor of the nearby caves for you (your puzzle input).
+
+Smoke flows to the lowest point of the area it's in. For example, consider the following heightmap:
+
+```
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+```
+
+Each number corresponds to the height of a particular location, where 9 is the highest and 0 is the lowest a location can be.
+
+Your first goal is to find the low points - the locations that are lower than any of its adjacent locations. Most locations have four adjacent locations (up, down, left, and right); locations on the edge or corner of the map have three or two adjacent locations, respectively. (Diagonal locations do not count as adjacent.)
+
+In the above example, there are four low points, all highlighted: two are in the first row (a 1 and a 0), one is in the third row (a 5), and one is in the bottom row (also a 5). All other locations on the heightmap have some lower adjacent location, and so are not low points.
+
+The risk level of a low point is 1 plus its height. In the above example, the risk levels of the low points are 2, 1, 6, and 6. The sum of the risk levels of all low points in the heightmap is therefore 15.
+
+Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
+
+```elixir
+{timing, :ok} =
+  :timer.tc(fn ->
+    as_grid = fn multiline_text ->
+      # TODO: move to AOC module
+      [line0 | _] = lines = AOC.as_single_lines(multiline_text)
+      grid_width = String.length(line0)
+      grid_height = Enum.count(lines)
+
+      lines
+      |> Enum.join("")
+      |> String.split("", trim: true)
+      |> Enum.with_index()
+      |> Map.new(fn {character, index} -> {index, character} end)
+      |> Map.merge(%{
+        grid_width: grid_width,
+        grid_height: grid_height,
+        last_cell: grid_height * grid_width - 1
+      })
+    end
+
+    as_grid_of_digits = fn multiline_text ->
+      # TODO: move to AOC module
+      as_grid.(multiline_text)
+      |> Enum.reduce(%{}, fn {key, value}, acc ->
+        Map.put(acc, key, (is_integer(value) && value) || String.to_integer(value))
+      end)
+    end
+
+    # We only want 4 neighbors, not 8
+    # TODO: move to AOC module
+    neighbors4 = fn grid, index ->
+      [
+        index + 1,
+        index - 1,
+        index + grid.grid_width,
+        index - grid.grid_width
+      ]
+      |> Enum.filter(fn neighbor -> grid[neighbor] end)
+      # must be on the same row or column
+      |> Enum.filter(fn neighbor ->
+        div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
+          rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
+      end)
+    end
+
+    is_low = fn grid, index ->
+      cell = grid[index]
+
+      neighbors4.(grid, index)
+      |> Enum.all?(fn neighbor_index ->
+        grid[neighbor_index] == nil || grid[neighbor_index] > cell
+      end)
+    end
+
+    find_the_lows = fn %{last_cell: last_cell} = grid ->
+      0..last_cell
+      |> Enum.filter(fn index ->
+        is_low.(grid, index)
+        # |> IO.inspect(label: "#{index}")
+      end)
+    end
+
+    grid =
+      p1data.()
+      |> as_grid_of_digits.()
+
+    part1answer =
+      grid
+      |> find_the_lows.()
+      # |> IO.inspect()
+      |> Enum.reduce(0, fn position, acc ->
+        acc + grid[position] + 1
+      end)
+
+    # 522
+    IO.puts("Part 1 Solution: #{part1answer}")
+
+    :ok
+  end)
+
+IO.puts("Timing: #{timing / 1_000_000} seconds")
+```
+
+## Part 2 (maybe solved above)
+
+* Add part 2 puzzle instructions here
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+AOC.p1data()
+# 4873
+|> score.()
+```
+
+### Epilogue
+
+This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day08.livemd
+
+In an effort to "show my work", here are my searches that helped solve the puzzle.
+Some are very basic.
+
+* blah blah
+  [ginger]()
