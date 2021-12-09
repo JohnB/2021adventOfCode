@@ -53,7 +53,7 @@ end
 
 ## Part 1
 
-### Day 9: Smoke Basin ---
+### Day 9: Smoke Basin
 
 These caves seem to be lava tubes. Parts are even still volcanically active; small hydrothermal vents release smoke into the caves that slowly settles like rain.
 
@@ -80,82 +80,145 @@ The risk level of a low point is 1 plus its height. In the above example, the ri
 Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
 
 ```elixir
+# {timing, :ok} = :timer.tc(fn -> 
+
+as_grid = fn multiline_text ->
+  # TODO: move to AOC module
+  [line0 | _] = lines = AOC.as_single_lines(multiline_text)
+  grid_width = String.length(line0)
+  grid_height = Enum.count(lines)
+
+  lines
+  |> Enum.join("")
+  |> String.split("", trim: true)
+  |> Enum.with_index()
+  |> Map.new(fn {character, index} -> {index, character} end)
+  |> Map.merge(%{
+    grid_width: grid_width,
+    grid_height: grid_height,
+    last_cell: grid_height * grid_width - 1
+  })
+end
+
+as_grid_of_digits = fn multiline_text ->
+  # TODO: move to AOC module
+  as_grid.(multiline_text)
+  |> Enum.reduce(%{}, fn {key, value}, acc ->
+    Map.put(acc, key, (is_integer(value) && value) || String.to_integer(value))
+  end)
+end
+
+# We only want 4 neighbors, not 8
+# TODO: move to AOC module
+neighbors4 = fn grid, index ->
+  [
+    index + 1,
+    index - 1,
+    index + grid.grid_width,
+    index - grid.grid_width
+  ]
+  |> Enum.filter(fn neighbor -> grid[neighbor] end)
+  # must be on the same row or column
+  |> Enum.filter(fn neighbor ->
+    div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
+      rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
+  end)
+end
+
+is_low = fn grid, index ->
+  cell = grid[index]
+
+  neighbors4.(grid, index)
+  # |> IO.inspect(label: "neighbors4")
+  |> Enum.all?(fn neighbor_index ->
+    grid[neighbor_index] == nil || grid[neighbor_index] > cell
+  end)
+end
+
+find_the_lows = fn %{last_cell: last_cell} = grid ->
+  0..last_cell
+  |> Enum.filter(fn index ->
+    is_low.(grid, index)
+    # |> IO.inspect(label: "#{index}")
+  end)
+end
+
+grid =
+  p1data.()
+  |> as_grid_of_digits.()
+
+part1answer =
+  grid
+  |> find_the_lows.()
+  # |> IO.inspect()
+  |> Enum.reduce(0, fn position, acc ->
+    acc + grid[position] + 1
+  end)
+
+# 522
+IO.puts("Part 1 Solution: #{part1answer}")
+
+# :ok
+# end)
+# IO.puts("Timing: #{timing / 1_000_000} seconds")
+
+### Part 2
+
+too_high = 11
+
 {timing, :ok} =
   :timer.tc(fn ->
-    as_grid = fn multiline_text ->
-      # TODO: move to AOC module
-      [line0 | _] = lines = AOC.as_single_lines(multiline_text)
-      grid_width = String.length(line0)
-      grid_height = Enum.count(lines)
-
-      lines
-      |> Enum.join("")
-      |> String.split("", trim: true)
-      |> Enum.with_index()
-      |> Map.new(fn {character, index} -> {index, character} end)
-      |> Map.merge(%{
-        grid_width: grid_width,
-        grid_height: grid_height,
-        last_cell: grid_height * grid_width - 1
-      })
-    end
-
-    as_grid_of_digits = fn multiline_text ->
-      # TODO: move to AOC module
-      as_grid.(multiline_text)
-      |> Enum.reduce(%{}, fn {key, value}, acc ->
-        Map.put(acc, key, (is_integer(value) && value) || String.to_integer(value))
-      end)
-    end
-
-    # We only want 4 neighbors, not 8
-    # TODO: move to AOC module
-    neighbors4 = fn grid, index ->
-      [
-        index + 1,
-        index - 1,
-        index + grid.grid_width,
-        index - grid.grid_width
-      ]
-      |> Enum.filter(fn neighbor -> grid[neighbor] end)
-      # must be on the same row or column
-      |> Enum.filter(fn neighbor ->
-        div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
-          rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
-      end)
-    end
-
-    is_low = fn grid, index ->
-      cell = grid[index]
-
-      neighbors4.(grid, index)
-      |> Enum.all?(fn neighbor_index ->
-        grid[neighbor_index] == nil || grid[neighbor_index] > cell
-      end)
-    end
-
-    find_the_lows = fn %{last_cell: last_cell} = grid ->
-      0..last_cell
-      |> Enum.filter(fn index ->
-        is_low.(grid, index)
-        # |> IO.inspect(label: "#{index}")
-      end)
-    end
-
-    grid =
-      p1data.()
-      |> as_grid_of_digits.()
-
-    part1answer =
+    lows =
       grid
       |> find_the_lows.()
+
+    # move to module so I can recurse
+    expand_basin = fn grid, basin_cells ->
+      marked_grid =
+        basin_cells
+        |> Enum.reduce(grid, fn {key, _value}, acc ->
+          Map.put(acc, key, too_high)
+        end)
+
+      basin_expansion =
+        basin_cells
+        |> Enum.map(fn basin_index ->
+          neighbors4.(marked_grid, basin_index)
+          |> Enum.filter(fn neighbor ->
+            is_low.(marked_grid, neighbor)
+          end)
+          |> Enum.uniq()
+          |> IO.inspect()
+        end)
+
+      case basin_expansion do
+        [] ->
+          basin_cells
+
+        _ ->
+          # expand_basin(marked_grid, Enum.uniq(basin_cells ++ basin_expansion))
+          nil
+      end
+    end
+
+    basins =
+      lows
+      |> Enum.map(fn low ->
+        basin_grid =
+          grid
+          |> Map.put(low, too_high)
+
+        expand_basin.(grid, low)
+      end)
       # |> IO.inspect()
       |> Enum.reduce(0, fn position, acc ->
         acc + grid[position] + 1
       end)
 
+    part2answer = 0
+
     # 522
-    IO.puts("Part 1 Solution: #{part1answer}")
+    IO.puts("Part 2 Solution: #{part2answer}")
 
     :ok
   end)
@@ -163,21 +226,60 @@ Find all of the low points on your heightmap. What is the sum of the risk levels
 IO.puts("Timing: #{timing / 1_000_000} seconds")
 ```
 
-## Part 2 (maybe solved above)
+## Part 2
 
-* Add part 2 puzzle instructions here
+Next, you need to find the largest basins so you know what areas are most important to avoid.
+
+A basin is all locations that eventually flow downward to a single low point. Therefore, every low point has a basin, although some basins are very small. Locations of height 9 do not count as being in any basin, and all other locations will always be part of exactly one basin.
+
+The size of a basin is the number of locations within the basin, including the low point. The example above has four basins.
+
+The top-left basin, size 3:
+
+```
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+```
+
+The top-right basin, size 9:
+
+```
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+```
+
+The middle basin, size 14:
+
+```
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+```
+
+The bottom-right basin, size 9:
+
+```
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+```
+
+Find the three largest basins and multiply their sizes together. In the above example, this is 9 * 14 * 9 = 1134.
+
+What do you get if you multiply together the sizes of the three largest basins?
 
 ```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
-end
 
-AOC.p1data()
-# 4873
-|> score.()
 ```
 
 ### Epilogue
