@@ -2,7 +2,7 @@
 
 <!-- livebook:{"persist_outputs":true} -->
 
-# Template for Day 8
+# Day 8
 
 ## Installation and Data
 
@@ -267,7 +267,11 @@ ready_to_interpret =
   lines
   |> Enum.map(fn line ->
     [signals, outputs] = String.split(line, "|")
-    [str_sort.(signals) |> Enum.sort_by(&byte_size/1), str_sort.(outputs)]
+    # sort the signals from 0 to 9, but the output must stay in its original order.
+    [
+      str_sort.(signals) |> Enum.sort_by(&byte_size/1),
+      str_sort.(outputs)
+    ]
   end)
 
 part2answer =
@@ -341,6 +345,7 @@ part2answer =
 
 # 986034
 IO.puts("Part 2 Solution: #{part2answer}")
+part2answer
 ```
 
 ```output
@@ -548,7 +553,7 @@ Part 2 Solution: 986034
 ```
 
 ```output
-:ok
+986034
 ```
 
 ### Epilogue
@@ -558,5 +563,4 @@ This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021a
 In an effort to "show my work", here are my searches that helped solve the puzzle.
 Some are very basic.
 
-* blah blah
-  [ginger]()
+* [Find the difference between two lists](https://kmrakibulislam.wordpress.com/2015/10/25/find-common-items-in-two-lists-in-elixir/)
