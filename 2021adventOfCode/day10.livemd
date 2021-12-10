@@ -53,7 +53,7 @@ end
 
 ## Part 1
 
-### Syntax Scoring ---
+### Syntax Scoring
 
 You ask the submarine to determine the best route out of the deep-sea cave, but it only replies:
 
@@ -119,6 +119,19 @@ Find the first illegal character in each corrupted line of the navigation subsys
 
 ```elixir
 defmodule Day10 do
+  @scoring %{
+    ")" => 3,
+    "]" => 57,
+    "}" => 1197,
+    ">" => 25137
+  }
+  @score2 %{
+    ")" => 1,
+    "]" => 2,
+    "}" => 3,
+    ">" => 4
+  }
+
   def shrink(str) do
     start_length = String.length(str)
 
@@ -142,32 +155,70 @@ defmodule Day10 do
   def clean(str) do
     String.replace(str, ~r/\(|\[|\{|\</, "", global: true)
   end
+
+  def completion(str) do
+    str
+    |> String.reverse()
+    |> String.replace("(", ")", global: true)
+    |> String.replace("[", "]", global: true)
+    |> String.replace("{", "}", global: true)
+    |> String.replace("<", ">", global: true)
+  end
+
+  def score(str) do
+    str
+    |> String.split("", trim: true)
+    |> Enum.reduce(0, fn char, acc ->
+      5 * acc + @score2[char]
+    end)
+  end
+
+  def solve_part1(text) do
+    text
+    |> AOC.as_single_lines()
+    |> Enum.map(fn str ->
+      str
+      |> Day10.shrink()
+      |> Day10.clean()
+    end)
+    |> Enum.reject(fn x -> x == "" end)
+    |> Enum.map(fn x -> String.first(x) end)
+    |> Enum.map(fn x -> @scoring[x] end)
+    |> Enum.sum()
+  end
+
+  def solve_part2(text) do
+    leftovers =
+      text
+      |> AOC.as_single_lines()
+      |> Enum.map(fn str ->
+        str
+        |> Day10.shrink()
+      end)
+      |> Enum.reject(fn x -> x =~ ~r/\)|\]|\}|\>/ end)
+
+    midway = Kernel.div(Enum.count(leftovers), 2)
+
+    sorted_scores =
+      leftovers
+      |> Enum.map(fn str -> completion(str) end)
+      |> Enum.map(fn str -> score(str) end)
+      |> Enum.sort()
+
+    Enum.fetch(sorted_scores, midway)
+  end
 end
 
-scoring = %{
-  ")" => 3,
-  "]" => 57,
-  "}" => 1197,
-  ">" => 25137
-}
+# example: 26397
+# puzzle: 339537
+# Day10.solve_part1(p1data.())
 
-p1data.()
-|> AOC.as_single_lines()
-|> Enum.map(fn str ->
-  str
-  |> Day10.shrink()
-  |> Day10.clean()
-end)
-|> Enum.reject(fn x -> x == "" end)
-|> Enum.map(fn x -> String.first(x) end)
-|> Enum.map(fn x -> scoring[x] end)
-|> Enum.sum()
-
-# 4873
-# |> score.()
+# example: 288957
+# puzzle: 2412013412
+Day10.solve_part2(p1data.())
 ```
 
-## Part 2 (maybe solved above)
+## Part 2 (solved above)
 
 Now, discard the corrupted lines. The remaining lines are incomplete.
 
@@ -216,18 +267,7 @@ Autocomplete tools are an odd bunch: the winner is found by sorting all of the s
 
 Find the completion string for each incomplete line, score the completion strings, and sort the scores. What is the middle score?
 
-```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
-end
-
-AOC.p1data()
-# 4873
-|> score.()
-```
+<!-- livebook:{"break_markdown":true} -->
 
 ### Epilogue
 
