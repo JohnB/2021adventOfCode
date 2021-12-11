@@ -4,8 +4,6 @@
 
 ## Installation and Data
 
-<!-- livebook:{"reevaluate_automatically":true} -->
-
 ```elixir
 Mix.install([
   {:kino, "~> 0.4.1"}
@@ -80,150 +78,130 @@ The risk level of a low point is 1 plus its height. In the above example, the ri
 Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
 
 ```elixir
-# {timing, :ok} = :timer.tc(fn -> 
+defmodule Day9 do
+  def is_low(grid, index) do
+    # TODO: add a clause for less than 9
+    cell = grid[index]
 
-as_grid = fn multiline_text ->
-  # TODO: move to AOC module
-  [line0 | _] = lines = AOC.as_single_lines(multiline_text)
-  grid_width = String.length(line0)
-  grid_height = Enum.count(lines)
+    AOC.neighbors4(grid, index)
+    # |> IO.inspect(label: "neighbors4")
+    |> Enum.all?(fn neighbor_index ->
+      grid[neighbor_index] == nil || grid[neighbor_index] > cell
+    end)
+  end
 
-  lines
-  |> Enum.join("")
-  |> String.split("", trim: true)
-  |> Enum.with_index()
-  |> Map.new(fn {character, index} -> {index, character} end)
-  |> Map.merge(%{
-    grid_width: grid_width,
-    grid_height: grid_height,
-    last_cell: grid_height * grid_width - 1
-  })
-end
+  def find_the_lows(%{last_cell: last_cell} = grid) do
+    0..last_cell
+    |> Enum.filter(fn index ->
+      is_low(grid, index)
+      # |> IO.inspect(label: "#{index}")
+    end)
+  end
 
-as_grid_of_digits = fn multiline_text ->
-  # TODO: move to AOC module
-  as_grid.(multiline_text)
-  |> Enum.reduce(%{}, fn {key, value}, acc ->
-    Map.put(acc, key, (is_integer(value) && value) || String.to_integer(value))
-  end)
-end
+  def part1(text) do
+    grid =
+      text
+      |> AOC.as_grid_of_digits()
 
-# We only want 4 neighbors, not 8
-# TODO: move to AOC module
-neighbors4 = fn grid, index ->
-  [
-    index + 1,
-    index - 1,
-    index + grid.grid_width,
-    index - grid.grid_width
-  ]
-  |> Enum.filter(fn neighbor -> grid[neighbor] end)
-  # must be on the same row or column
-  |> Enum.filter(fn neighbor ->
-    div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
-      rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
-  end)
-end
-
-is_low = fn grid, index ->
-  cell = grid[index]
-
-  neighbors4.(grid, index)
-  # |> IO.inspect(label: "neighbors4")
-  |> Enum.all?(fn neighbor_index ->
-    grid[neighbor_index] == nil || grid[neighbor_index] > cell
-  end)
-end
-
-find_the_lows = fn %{last_cell: last_cell} = grid ->
-  0..last_cell
-  |> Enum.filter(fn index ->
-    is_low.(grid, index)
-    # |> IO.inspect(label: "#{index}")
-  end)
-end
-
-grid =
-  p1data.()
-  |> as_grid_of_digits.()
-
-part1answer =
-  grid
-  |> find_the_lows.()
-  # |> IO.inspect()
-  |> Enum.reduce(0, fn position, acc ->
-    acc + grid[position] + 1
-  end)
-
-# 522
-IO.puts("Part 1 Solution: #{part1answer}")
-
-# :ok
-# end)
-# IO.puts("Timing: #{timing / 1_000_000} seconds")
-
-### Part 2
-
-too_high = 11
-
-{timing, :ok} =
-  :timer.tc(fn ->
-    lows =
+    part1answer =
       grid
-      |> find_the_lows.()
-
-    # move to module so I can recurse
-    expand_basin = fn grid, basin_cells ->
-      marked_grid =
-        basin_cells
-        |> Enum.reduce(grid, fn {key, _value}, acc ->
-          Map.put(acc, key, too_high)
-        end)
-
-      basin_expansion =
-        basin_cells
-        |> Enum.map(fn basin_index ->
-          neighbors4.(marked_grid, basin_index)
-          |> Enum.filter(fn neighbor ->
-            is_low.(marked_grid, neighbor)
-          end)
-          |> Enum.uniq()
-          |> IO.inspect()
-        end)
-
-      case basin_expansion do
-        [] ->
-          basin_cells
-
-        _ ->
-          # expand_basin(marked_grid, Enum.uniq(basin_cells ++ basin_expansion))
-          nil
-      end
-    end
-
-    basins =
-      lows
-      |> Enum.map(fn low ->
-        basin_grid =
-          grid
-          |> Map.put(low, too_high)
-
-        expand_basin.(grid, low)
-      end)
+      |> find_the_lows()
       # |> IO.inspect()
       |> Enum.reduce(0, fn position, acc ->
         acc + grid[position] + 1
       end)
 
+    # 522
+    IO.puts("Part 1 Solution: #{part1answer}")
+  end
+
+  # :ok
+  # end)
+  # IO.puts("Timing: #{timing / 1_000_000} seconds")
+
+  ### Part 2
+  @too_high 11
+
+  def expand_basin(grid, basin_cells, depth \\ 0)
+
+  def expand_basin(grid, basin_cells, 2 = _depth) do
+    IO.inspect([basin_cells, grid], label: "stopping")
+    basin_cells
+  end
+
+  def expand_basin(grid, basin_cells, depth) do
+    IO.inspect([basin_cells, depth], label: "expand_basin")
+
+    marked_grid =
+      basin_cells
+      |> List.flatten()
+      |> Enum.reduce(grid, fn cell, acc ->
+        IO.inspect([cell], label: "mark too high")
+        Map.put(acc, cell, @too_high)
+      end)
+
+    # |> IO.inspect(label: "marked_grid")
+
+    basin_expansion =
+      basin_cells
+      |> Enum.map(fn basin_index ->
+        IO.inspect(label: "index#{basin_index}")
+
+        AOC.neighbors4(marked_grid, basin_index)
+        |> Enum.filter(fn neighbor ->
+          is_low(marked_grid, neighbor)
+        end)
+        |> Enum.uniq()
+        |> IO.inspect(label: "index#{basin_index}")
+      end)
+      |> IO.inspect(label: "basin_expansion")
+
+    case basin_expansion do
+      [] ->
+        basin_cells
+
+      _ ->
+        flat =
+          Enum.uniq([basin_cells] ++ basin_expansion)
+          |> List.flatten()
+
+        expand_basin(marked_grid, flat, depth + 1)
+    end
+  end
+
+  def part2(text) do
+    grid =
+      text
+      |> AOC.as_grid_of_digits()
+
+    lows =
+      grid
+      |> find_the_lows()
+
+    _basins =
+      lows
+      |> Enum.map(fn low ->
+        expand_basin(grid, [low])
+      end)
+      |> IO.inspect()
+
     part2answer = 0
 
     # 522
     IO.puts("Part 2 Solution: #{part2answer}")
+  end
+end
 
-    :ok
+# {timing, :ok} = :timer.tc(fn -> 
+#   Day9.part1(p1data.())
+# end)
+
+{timing, :ok} =
+  :timer.tc(fn ->
+    Day9.part2(p1data.())
   end)
 
-IO.puts("Timing: #{timing / 1_000_000} seconds")
+IO.puts("Timing: #{Float.round(timing / 1_000, 3)} ms")
 ```
 
 ## Part 2
@@ -289,5 +267,7 @@ This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021a
 In an effort to "show my work", here are my searches that helped solve the puzzle.
 Some are very basic.
 
-* blah blah
-  [ginger]()
+* [Kernel.rem()](https://hexdocs.pm/elixir/1.12/Kernel.html#rem/2) and
+  [Enum.map()](https://hexdocs.pm/elixir/Enum.html#map/2)
+* [How to time in elixir](https://til.hashrocket.com/posts/9jxsfxysey-timing-a-function-in-elixir) and
+  [formatting of it](https://stackoverflow.com/questions/43536481/how-to-format-a-number-to-precision-in-elixir)
