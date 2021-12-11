@@ -40,17 +40,38 @@ defmodule AdventOfCode do
   def neighbors4(grid, index) do
     #IO.inspect([index], label: "neighbors4")
     [
-      index + 1,
+      index - grid.grid_width,
       index - 1,
+      index + 1,
       index + grid.grid_width,
-      index - grid.grid_width
     ]
-    |> Enum.filter(fn neighbor -> grid[neighbor] end)
+    |> Enum.filter(fn neighbor -> grid[neighbor] end) #off-board
     |> Enum.filter(fn neighbor ->
       # must be on the same row or column
       div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
         rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
     end)
+  end
+
+  # We only want all 8 neighbors
+  def neighbors8(grid, index) do
+    #IO.inspect([index], label: "neighbors8")
+    [
+      index - grid.grid_width - 1,
+      index - grid.grid_width,
+      index - grid.grid_width + 1,
+      index - 1,
+      index + 1,
+      index + grid.grid_width - 1,
+      index + grid.grid_width,
+      index + grid.grid_width + 1,
+    ]
+    |> Enum.filter(fn neighbor -> grid[neighbor] end) #off-board
+    # How to handle edges?
+#    |> Enum.filter(fn neighbor ->
+#      div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
+#        rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
+#    end)
   end
 
   # Paragraph-based helpers

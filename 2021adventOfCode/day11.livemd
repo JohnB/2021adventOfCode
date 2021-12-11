@@ -53,19 +53,174 @@ end
 
 ## Part 1
 
-### part 1 title here
+### Day 11: Dumbo Octopus ---
 
-* Add part 1 puzzle instructions here
+You enter a large cavern full of rare bioluminescent dumbo octopuses! They seem to not like the Christmas lights on your submarine, so you turn them off for now.
+
+There are 100 octopuses arranged neatly in a 10 by 10 grid. Each octopus slowly gains energy over time and flashes brightly for a moment when its energy is full. Although your lights are off, maybe you could navigate through the cave without disturbing the octopuses if you could predict when the flashes of light will happen.
+
+Each octopus has an energy level - your submarine can remotely measure the energy level of each octopus (your puzzle input). For example:
+
+```
+5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526
+```
+
+The energy level of each octopus is a value between 0 and 9. Here, the top-left octopus has an energy level of 5, the bottom-right one has an energy level of 6, and so on.
+
+You can model the energy levels and flashes of light in steps. During a single step, the following occurs:
+
+* First, the energy level of each octopus increases by 1.
+* Then, any octopus with an energy level greater than 9 flashes. This increases the energy level of all adjacent octopuses by 1, including octopuses that are diagonally adjacent. If this causes an octopus to have an energy level greater than 9, it also flashes. This process continues as long as new octopuses keep having their energy level increased beyond 9. (An octopus can only flash at most once per step.)
+* Finally, any octopus that flashed during this step has its energy level set to 0, as it used all of its energy to flash.
+* Adjacent flashes can cause an octopus to flash on a step even if it begins that step with very little energy. 
+  Consider the middle octopus with 1 energy in this situation: **it works because of the initial +1 before the +8**
 
 ```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
+ascii_zero = 48
+
+display_grid = fn grid, text ->
+  IO.puts("--- #{text}")
+
+  0..grid.last_cell
+  |> Enum.chunk_every(grid.grid_width)
+  |> Enum.map(fn indexes ->
+    indexes
+    |> Enum.map(fn index -> ascii_zero + grid[index] end)
+    |> IO.puts()
+  end)
+
+  grid
 end
 
-p1data.()
+increment_some = fn grid, to_increment, delta ->
+  to_increment
+  |> Enum.reduce(grid, fn index, acc ->
+    # IO.inspect([index, acc], label: "index&acc")
+    {_, greater_grid} =
+      acc
+      # |> IO.inspect(label: "before get&update")
+      |> Map.get_and_update(index, fn current_value ->
+        {current_value, current_value + delta}
+        # |> IO.inspect(label: "post-update")
+      end)
+
+    # |> IO.inspect(label: "after get&update")
+
+    greater_grid
+  end)
+end
+
+increment = fn grid ->
+  increment_some.(grid, 0..grid.last_cell, 1)
+end
+
+knock_down = fn grid ->
+  0..grid.last_cell
+  |> Enum.reduce(grid, fn index, acc ->
+    {_, greater_grid} =
+      Map.get_and_update(acc, index, fn current_value ->
+        {current_value, (current_value > 9 && 0) || current_value}
+      end)
+
+    greater_grid
+  end)
+end
+
+neighbors8 = fn grid, index ->
+  # IO.inspect([index], label: "neighbors8")
+  [
+    index - grid.grid_width - 1,
+    index - grid.grid_width,
+    index - grid.grid_width + 1,
+    index - 1,
+    index + 1,
+    index + grid.grid_width - 1,
+    index + grid.grid_width,
+    index + grid.grid_width + 1
+  ]
+  # off-board
+  |> Enum.filter(fn neighbor -> grid[neighbor] end)
+
+  # How to handle edges? WILL BREAK STEPS 2 AND 3 
+  #    |> Enum.filter(fn neighbor ->
+  #      div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
+  #        rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
+  #    end)
+end
+
+flashable = fn grid ->
+  0..grid.last_cell
+  |> Enum.filter(fn index -> grid[index] >= 10 && grid[index] < 100 end)
+end
+
+flash_neighborhood = fn grid, flashable ->
+  flashable
+  |> Enum.reduce([], fn index, neighbors ->
+    neighbors ++ neighbors8.(grid, index)
+  end)
+end
+
+iterate = fn grid, iteration ->
+  boosted =
+    grid
+    |> display_grid.("START iteration #{iteration}")
+    |> increment.()
+    |> display_grid.("boosted")
+
+  # hopefully each application will complete w/in 100 tries
+  Enum.reduce_while(0..9, boosted, fn n, acc ->
+    IO.puts("reduce_while(#{n})")
+
+    flashable =
+      acc
+      # |> display_grid.("pre-flashable")
+      |> flashable.()
+      |> IO.inspect(label: "flashable")
+
+    neighbors =
+      acc
+      |> flash_neighborhood.(flashable)
+
+    acc =
+      acc
+      |> increment_some.(neighbors, 1)
+      |> increment_some.(flashable, 1000)
+      |> display_grid.("post increment_some(#{Enum.count(neighbors)} neighbors)")
+
+    {(flashable == [] && :halt) || :cont, knock_down.(acc)}
+    # |> IO.inspect(label: "while")
+  end)
+  |> display_grid.("END iteration #{iteration}")
+end
+
+sample = "11111
+19991
+19191
+19991
+11111"
+
+grid =
+  p1data.()
+  # sample
+  |> AOC.as_grid_of_digits()
+
+# |> display_grid.("117")
+
+1..5
+|> Enum.reduce(grid, fn iteration, acc ->
+  iterate.(acc, iteration)
+end)
+
+:ok
 # 4873
 # |> score.()
 ```
