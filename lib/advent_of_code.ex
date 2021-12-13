@@ -38,7 +38,6 @@ defmodule AdventOfCode do
 
   # We only want 4 neighbors, not 8
   def neighbors4(grid, index) do
-    #IO.inspect([index], label: "neighbors4")
     [
       index - grid.grid_width,
       index - 1,
@@ -47,7 +46,7 @@ defmodule AdventOfCode do
     ]
     |> Enum.filter(fn neighbor -> grid[neighbor] end) #off-board
     |> Enum.filter(fn neighbor ->
-      # must be on the same row or column
+      # must be on the same row or column to ensure we don't go side-to-side
       div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
         rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
     end)
@@ -55,23 +54,40 @@ defmodule AdventOfCode do
 
   # We only want all 8 neighbors
   def neighbors8(grid, index) do
-    #IO.inspect([index], label: "neighbors8")
-    [
-      index - grid.grid_width - 1,
-      index - grid.grid_width,
-      index - grid.grid_width + 1,
-      index - 1,
-      index + 1,
-      index + grid.grid_width - 1,
-      index + grid.grid_width,
-      index + grid.grid_width + 1,
-    ]
+    x = rem(index, grid.grid_width)
+    # only worry about going off the sides - the top and bottom
+    # excursions will be off-board and removed when they return nil.
+    positions =
+      [index - grid.grid_width, index + grid.grid_width] ++
+      if x > 0 do
+        [index - grid.grid_width - 1, index - 1, index + grid.grid_width - 1]
+      else
+        []
+      end ++
+      if x == (grid.grid_width - 1) do
+        []
+      else
+        [index - grid.grid_width + 1, index + 1, index + grid.grid_width + 1]
+      end
+
+    positions
     |> Enum.filter(fn neighbor -> grid[neighbor] end) #off-board
-    # How to handle edges?
-#    |> Enum.filter(fn neighbor ->
-#      div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
-#        rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
-#    end)
+  end
+
+  @ascii_zero 48
+  @max_display 40
+  def display_grid(grid, text) do
+    IO.puts("--- #{text}")
+    (0..grid.last_cell)
+    |> Enum.chunk_every(grid.grid_width)
+    |> Enum.map(fn indexes ->
+      indexes
+      |> Enum.map(fn index ->
+        (grid[index] >= @max_display) && "." || (@ascii_zero + grid[index])
+      end)
+      |> IO.puts()
+    end)
+    grid
   end
 
   # Paragraph-based helpers

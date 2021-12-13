@@ -119,6 +119,11 @@ increment = fn grid ->
   increment_some.(grid, 0..grid.last_cell, 1)
 end
 
+is_all_zeros = fn grid ->
+  0..grid.last_cell
+  |> Enum.all?(fn position -> grid[position] == 0 end)
+end
+
 knock_down = fn grid ->
   0..grid.last_cell
   |> Enum.reduce(grid, fn index, acc ->
@@ -181,7 +186,7 @@ end
 iterate = fn grid, num_flashes, iteration ->
   boosted =
     grid
-    |> display_grid.("START iteration #{iteration} (#{num_flashes})")
+    # |> display_grid.("START iteration #{iteration} (#{num_flashes})")
     |> increment.()
 
   # |> display_grid.("boosted iteration #{iteration}")
@@ -215,8 +220,10 @@ iterate = fn grid, num_flashes, iteration ->
   new_grid =
     new_grid
     |> knock_down.()
-    |> display_grid.("END iteration #{iteration}  (#{flash_count})")
 
+  # |> display_grid.("END iteration #{iteration}  (#{flash_count})")
+
+  IO.puts("END iteration #{iteration} (#{flash_count})")
   {new_grid, flash_count}
 end
 
@@ -231,39 +238,18 @@ grid =
   # sample
   |> AOC.as_grid_of_digits()
 
-1..101
+1..2000
 |> Enum.reduce({grid, 0}, fn iteration, {acc, flashes} ->
-  iterate.(acc, flashes, iteration)
+  {latest_grid, num_flashes} = iterate.(acc, flashes, iteration)
+
+  if is_all_zeros.(latest_grid) do
+    IO.puts("FINISHED AT ITERATION #{iteration}")
+  end
+
+  {latest_grid, num_flashes}
 end)
 
 :ok
 # 4873
 # |> score.()
 ```
-
-## Part 2 (maybe solved above)
-
-* Add part 2 puzzle instructions here
-
-```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
-end
-
-AOC.p1data()
-# 4873
-|> score.()
-```
-
-### Epilogue
-
-This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day08.livemd
-
-In an effort to "show my work", here are my searches that helped solve the puzzle.
-Some are very basic.
-
-* blah blah
-  [ginger]()
