@@ -4,24 +4,51 @@
 
 ## Installation and Data
 
-<!-- livebook:{"livebook_object":"cell_input","name":"Day of Advent:","type":"number","value":"6"} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Example: ","type":"textarea","value":"3,4,3,1,2"} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Puzzle Input: ","type":"textarea","value":"1,4,1,1,1,1,1,1,1,4,3,1,1,3,5,1,5,3,2,1,1,2,3,1,1,5,3,1,5,1,1,2,1,2,1,1,3,1,5,1,1,1,3,1,1,1,1,1,1,4,5,3,1,1,1,1,1,1,2,1,1,1,1,4,4,4,1,1,1,1,5,1,2,4,1,1,4,1,2,1,1,1,2,1,5,1,1,1,3,4,1,1,1,3,2,1,1,1,4,1,1,1,5,1,1,4,1,1,2,1,4,1,1,1,3,1,1,1,1,1,3,1,3,1,1,2,1,4,1,1,1,1,3,1,1,1,1,1,1,2,1,3,1,1,1,1,4,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,5,1,1,1,2,2,1,1,3,5,1,1,1,1,3,1,3,3,1,1,1,1,3,5,2,1,1,1,1,5,1,1,1,1,1,1,1,2,1,2,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,5,1,4,3,3,1,3,4,1,1,1,1,1,1,1,1,1,1,4,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,5,2,1,4,1,1,1,1,1,1,1,1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,2,1,4,4,1,1,1,1,1,1,1,5,1,1,2,5,1,1,4,1,3,1,1"} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Example: ","type":"textarea","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 2 Puzzle Input: ","type":"textarea","value":""} -->
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 Mix.install([
-  {:kino, "~> 0.3.1"}
+  {:kino, "~> 0.4.1"}
 ])
 
 IEx.Helpers.c("lib/advent_of_code.ex")
 alias AdventOfCode, as: AOC
-AOC.link_to_day()
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
 ```
 
 ## Part 1
@@ -84,8 +111,6 @@ In this example, after 18 days, there are a total of 26 fish. After 80 days, the
 **Part 1:** Find a way to simulate lanternfish. How many lanternfish would there be after 80 days?
 
 **Part 2:** How many lanternfish would there be after 256 days?
-
-<!-- livebook:{"livebook_object":"cell_input","name":"Part 1 Input Data","props":{"options":["example","puzzle input"]},"type":"select","value":"example"} -->
 
 ```elixir
 zero_buckets = %{

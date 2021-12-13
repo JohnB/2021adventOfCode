@@ -192,9 +192,15 @@ defmodule Day9 do
   end
 end
 
+# Part 1 Solution: 522
+# Timing: 26.297 ms
 # {timing, :ok} = :timer.tc(fn -> 
 #   Day9.part1(p1data.())
 # end)
+
+p1data.()
+|> AOC.as_grid_of_digits()
+|> AOC.display_grid("Before part 2")
 
 {timing, :ok} =
   :timer.tc(fn ->
