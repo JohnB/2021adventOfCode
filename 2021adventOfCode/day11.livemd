@@ -86,6 +86,7 @@ You can model the energy levels and flashes of light in steps. During a single s
 
 ```elixir
 ascii_zero = 48
+flash_value = 40
 
 display_grid = fn grid, text ->
   IO.puts("--- #{text}")
@@ -94,7 +95,7 @@ display_grid = fn grid, text ->
   |> Enum.chunk_every(grid.grid_width)
   |> Enum.map(fn indexes ->
     indexes
-    |> Enum.map(fn index -> ascii_zero + grid[index] end)
+    |> Enum.map(fn index -> (grid[index] >= flash_value && ".") || ascii_zero + grid[index] end)
     |> IO.puts()
   end)
 
@@ -104,16 +105,11 @@ end
 increment_some = fn grid, to_increment, delta ->
   to_increment
   |> Enum.reduce(grid, fn index, acc ->
-    # IO.inspect([index, acc], label: "index&acc")
     {_, greater_grid} =
       acc
-      # |> IO.inspect(label: "before get&update")
       |> Map.get_and_update(index, fn current_value ->
         {current_value, current_value + delta}
-        # |> IO.inspect(label: "post-update")
       end)
-
-    # |> IO.inspect(label: "after get&update")
 
     greater_grid
   end)
@@ -136,30 +132,43 @@ knock_down = fn grid ->
 end
 
 neighbors8 = fn grid, index ->
-  # IO.inspect([index], label: "neighbors8")
-  [
-    index - grid.grid_width - 1,
-    index - grid.grid_width,
-    index - grid.grid_width + 1,
-    index - 1,
-    index + 1,
-    index + grid.grid_width - 1,
-    index + grid.grid_width,
-    index + grid.grid_width + 1
-  ]
+  x = rem(index, grid.grid_width)
+  # only worry about going off the sides - the top and bottom
+  # excursions will be off-board and removed when they return nil.
+  positions =
+    [
+      index - grid.grid_width,
+      index + grid.grid_width
+    ] ++
+      if x > 0 do
+        [
+          index - grid.grid_width - 1,
+          index - 1,
+          index + grid.grid_width - 1
+        ]
+      else
+        []
+      end ++
+      if x == grid.grid_width - 1 do
+        []
+      else
+        [
+          index - grid.grid_width + 1,
+          index + 1,
+          index + grid.grid_width + 1
+        ]
+      end
+
+  positions
   # off-board
   |> Enum.filter(fn neighbor -> grid[neighbor] end)
 
-  # How to handle edges? WILL BREAK STEPS 2 AND 3 
-  #    |> Enum.filter(fn neighbor ->
-  #      div(neighbor, grid.grid_width) == div(index, grid.grid_width) ||
-  #        rem(neighbor, grid.grid_width) == rem(index, grid.grid_width)
-  #    end)
+  # |> IO.inspect(label: "neighbors8 for #{index},#{grid.grid_width} (#{x})")
 end
 
 flashable = fn grid ->
   0..grid.last_cell
-  |> Enum.filter(fn index -> grid[index] >= 10 && grid[index] < 100 end)
+  |> Enum.filter(fn index -> grid[index] >= 10 && grid[index] < flash_value end)
 end
 
 flash_neighborhood = fn grid, flashable ->
@@ -174,18 +183,17 @@ iterate = fn grid, iteration ->
     grid
     |> display_grid.("START iteration #{iteration}")
     |> increment.()
-    |> display_grid.("boosted")
+
+  # |> display_grid.("boosted iteration #{iteration}")
 
   # hopefully each application will complete w/in 100 tries
-  Enum.reduce_while(0..9, boosted, fn n, acc ->
-    IO.puts("reduce_while(#{n})")
-
+  Enum.reduce_while(0..19, boosted, fn _n, acc ->
+    # IO.puts("reduce_while(#{n}) iteration #{iteration}")
     flashable =
       acc
-      # |> display_grid.("pre-flashable")
       |> flashable.()
-      |> IO.inspect(label: "flashable")
 
+    # |> IO.inspect(label: "flashable iteration #{iteration} (#{n})")
     neighbors =
       acc
       |> flash_neighborhood.(flashable)
@@ -193,12 +201,14 @@ iterate = fn grid, iteration ->
     acc =
       acc
       |> increment_some.(neighbors, 1)
-      |> increment_some.(flashable, 1000)
-      |> display_grid.("post increment_some(#{Enum.count(neighbors)} neighbors)")
+      |> increment_some.(flashable, flash_value)
 
-    {(flashable == [] && :halt) || :cont, knock_down.(acc)}
+    # |> display_grid.("post increment_some(#{Enum.count(neighbors)} neighbors)")
+
+    {(flashable == [] && :halt) || :cont, acc}
     # |> IO.inspect(label: "while")
   end)
+  |> knock_down.()
   |> display_grid.("END iteration #{iteration}")
 end
 
@@ -213,9 +223,7 @@ grid =
   # sample
   |> AOC.as_grid_of_digits()
 
-# |> display_grid.("117")
-
-1..5
+1..11
 |> Enum.reduce(grid, fn iteration, acc ->
   iterate.(acc, iteration)
 end)
