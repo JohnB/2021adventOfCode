@@ -178,38 +178,46 @@ flash_neighborhood = fn grid, flashable ->
   end)
 end
 
-iterate = fn grid, iteration ->
+iterate = fn grid, num_flashes, iteration ->
   boosted =
     grid
-    |> display_grid.("START iteration #{iteration}")
+    |> display_grid.("START iteration #{iteration} (#{num_flashes})")
     |> increment.()
 
   # |> display_grid.("boosted iteration #{iteration}")
 
   # hopefully each application will complete w/in 100 tries
-  Enum.reduce_while(0..19, boosted, fn _n, acc ->
-    # IO.puts("reduce_while(#{n}) iteration #{iteration}")
-    flashable =
-      acc
-      |> flashable.()
+  {new_grid, flash_count} =
+    Enum.reduce_while(0..19, {boosted, num_flashes}, fn _n, {acc, flashes} ->
+      # IO.puts("reduce_while(#{n}) iteration #{iteration}")
+      flashable =
+        acc
+        |> flashable.()
 
-    # |> IO.inspect(label: "flashable iteration #{iteration} (#{n})")
-    neighbors =
-      acc
-      |> flash_neighborhood.(flashable)
+      # |> IO.inspect(label: "flashable iteration #{iteration} (#{n})")
+      flashes = flashes + Enum.count(flashable)
 
-    acc =
-      acc
-      |> increment_some.(neighbors, 1)
-      |> increment_some.(flashable, flash_value)
+      neighbors =
+        acc
+        |> flash_neighborhood.(flashable)
 
-    # |> display_grid.("post increment_some(#{Enum.count(neighbors)} neighbors)")
+      acc =
+        acc
+        |> increment_some.(neighbors, 1)
+        |> increment_some.(flashable, flash_value)
 
-    {(flashable == [] && :halt) || :cont, acc}
-    # |> IO.inspect(label: "while")
-  end)
-  |> knock_down.()
-  |> display_grid.("END iteration #{iteration}")
+      # |> display_grid.("post increment_some(#{Enum.count(neighbors)} neighbors)")
+
+      {(flashable == [] && :halt) || :cont, {acc, flashes}}
+      # |> IO.inspect(label: "while")
+    end)
+
+  new_grid =
+    new_grid
+    |> knock_down.()
+    |> display_grid.("END iteration #{iteration}  (#{flash_count})")
+
+  {new_grid, flash_count}
 end
 
 sample = "11111
@@ -223,9 +231,9 @@ grid =
   # sample
   |> AOC.as_grid_of_digits()
 
-1..11
-|> Enum.reduce(grid, fn iteration, acc ->
-  iterate.(acc, iteration)
+1..101
+|> Enum.reduce({grid, 0}, fn iteration, {acc, flashes} ->
+  iterate.(acc, flashes, iteration)
 end)
 
 :ok
