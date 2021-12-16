@@ -121,25 +121,21 @@ Apply 10 steps of pair insertion to the polymer template and find the most and l
 defmodule Day14 do
   # Recursively descend the requested number of levels, 
   # counting elements along the way.
-  def increment_count(counts, elements) do
+  def increment_count(_counts, tab, elements) do
     elements
-    |> Enum.reduce(counts, fn element, acc ->
-      # IO.inspect([counts, element, acc])
-      Map.get_and_update(acc, element, fn current_value ->
-        {current_value, (current_value && current_value + 1) || 1}
-      end)
-      |> elem(1)
+    |> Enum.each(fn element ->
+      :ets.update_counter(tab, to_charlist(element), {2, 1})
     end)
   end
 
-  def expand_and_count(template_string, rule_map, depth) do
+  def expand_and_count(template_string, rule_map, tab, depth) do
     elements =
       template_string
       |> String.split("", trim: true)
 
     # |> IO.inspect(label: "elements")    
 
-    counts = increment_count(%{}, elements)
+    counts = increment_count(%{}, tab, elements)
     # |> IO.inspect(label: "counts")    
 
     elements
@@ -148,25 +144,31 @@ defmodule Day14 do
     |> Enum.reduce(counts, fn pair, acc ->
       # IO.inspect(acc, label: "acc")    
 
-      _expand_and_count(acc, pair, rule_map, depth)
+      _expand_and_count(acc, pair, rule_map, tab, depth)
     end)
   end
 
-  def _expand_and_count(counts, _pair, _rule_map, _depth = 0) do
+  def _expand_and_count(counts, _pair, _rule_map, tab, _depth = 0) do
     counts
   end
 
-  def _expand_and_count(counts, [left, right], rule_map, depth) do
+  def _expand_and_count(counts, [left, right], rule_map, tab, depth) do
     new_element = rule_map[left <> right]
+    counts = increment_count(%{}, tab, [new_element])
     # |> IO.inspect(label: "new_element for #{left},#{right} at #{depth}")    
 
     counts
-    |> increment_count([new_element])
-    |> _expand_and_count([left, new_element], rule_map, depth - 1)
-    |> _expand_and_count([new_element, right], rule_map, depth - 1)
+    |> increment_count(tab, [new_element])
+    |> _expand_and_count([left, new_element], rule_map, tab, depth - 1)
+    |> _expand_and_count([new_element, right], rule_map, tab, depth - 1)
   end
 
-  def day_14_part_1(text, depth) do
+  def ets_values(tab) do
+    Enum.map(65..90, fn x -> :ets.lookup(tab, to_charlist(x)) end)
+    |> IO.inspect(label: "ETS?")
+  end
+
+  def day_14_part_1(text, tab, depth) do
     [template_string | rules] =
       text
       |> AOC.as_paragraph_lines()
@@ -179,9 +181,10 @@ defmodule Day14 do
       |> Map.new(fn [k, v] -> {k, v} end)
 
     quantities =
-      expand_and_count(template_string, rule_map, depth)
+      expand_and_count(template_string, rule_map, tab, depth)
       |> IO.inspect(label: "map")
-      |> Map.values()
+      # |> Map.values()
+      |> ets_values()
       |> Enum.sort()
 
     (List.last(quantities) - List.first(quantities))
@@ -189,8 +192,18 @@ defmodule Day14 do
   end
 end
 
-p1data.()
-|> Day14.day_14_part_1(40)
+:ets.delete(:day_14)
+
+tab =
+  :ets.new(:day_14, [:set, :named_table, :public, read_concurrency: true, write_concurrency: true])
+
+Enum.map(65..90, fn x -> :ets.insert(tab, {to_charlist([x]), 0}) end)
+Day14.ets_values(tab)
+
+{timing, answer} =
+  :timer.tc(fn ->
+    Day14.day_14_part_1(p1data.(), tab, 4)
+  end)
 
 # 2768 ?
 ```

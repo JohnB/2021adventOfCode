@@ -1,0 +1,148 @@
+<!-- vim: syntax=markdown -->
+
+# Day 15
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### Day 15: Chiton
+
+You've almost reached the exit of the cave, but the walls are getting closer together. Your submarine can barely still fit, though; the main problem is that the walls of the cave are covered in chitons, and it would be best not to bump any of them.
+
+The cavern is large, but has a very low ceiling, restricting your motion to two dimensions. The shape of the cavern resembles a square; a quick scan of chiton density produces a map of risk level throughout the cave (your puzzle input). For example:
+
+```
+1163751742
+1381373672
+2136511328
+3694931569
+7463417111
+1319128137
+1359912421
+3125421639
+1293138521
+2311944581
+```
+
+You start in the top left position, your destination is the bottom right position, and you cannot move diagonally. The number at each position is its risk level; to determine the total risk of an entire path, add up the risk levels of each position you enter (that is, don't count the risk level of your starting position unless you enter it; leaving it adds no risk to your total).
+
+Your goal is to find a path with the lowest total risk. In this example, 
+a path with the lowest total risk is highlighted [here](https://adventofcode.com/2021/day/15)
+
+The total risk of this path is 40 (the starting position is never entered, so its risk is not counted).
+
+What is the lowest total risk of any path from the top left to the bottom right?
+
+```elixir
+defmodule Day15 do
+  def solve(text) do
+    grid =
+      text
+      |> AOC.as_grid_of_digits()
+      |> AOC.display_grid("start")
+
+    grid
+    # |> goal_seek([0], 0, grid.last_cell)
+    # |> Enum.sum()
+    |> find_cost()
+  end
+
+  @too_much 999_999
+  def find_cost(grid) do
+    1..grid.last_cell
+    |> Enum.reduce(Map.put(%{}, 0, 0), fn index, acc ->
+      current = Map.get(grid, index, 0)
+      left = Map.get(acc, index - 1, 0)
+      above = Map.get(acc, index - grid.grid_width, left)
+      IO.inspect([index, current, above, left], label: "")
+
+      Map.put(acc, index, current + Enum.min([above, left]))
+    end)
+    |> Map.get(grid.last_cell)
+  end
+end
+
+p1data.()
+|> Day15.solve()
+```
+
+## Part 2 (maybe solved above)
+
+* Add part 2 puzzle instructions here
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+AOC.p1data()
+# 4873
+|> score.()
+```
+
+### Epilogue
+
+This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day08.livemd
+
+In an effort to "show my work", here are my searches that helped solve the puzzle.
+Some are very basic.
+
+* [3-way](https://www.geeksforgeeks.org/minimum-cost-path-left-right-bottom-moves-allowed/)
+* [dynamic](https://algorithms.tutorialhorizon.com/dynamic-programming-minimum-cost-path-problem/)
+* [reminder that `while` is just recursion](https://elixirforum.com/t/write-while-loop-equivalent-in-elixir/15880)
+* [ETS](https://elixirschool.com/en/lessons/storage/ets#inserting-data-5) 
+  and [`update_counter/3`](https://www.erlang.org/doc/man/ets.html#update_counter-3)
+  as a faster replacement
+  for constantly updating the counts.
+* []()
