@@ -175,13 +175,34 @@ Decode the structure of your hexadecimal-encoded BITS transmission;
 what do you get if you add up the version numbers in all packets?
 
 ```elixir
-hex_to_long_binary = fn hex ->
-  hex
-  |> String.to_integer(16)
-  |> Integer.to_string(2)
-end
-
 defmodule Day16 do
+  @hex_to_bin %{
+    "0" => "0000",
+    "1" => "0001",
+    "2" => "0010",
+    "3" => "0011",
+    "4" => "0100",
+    "5" => "0101",
+    "6" => "0110",
+    "7" => "0111",
+    "8" => "1000",
+    "9" => "1001",
+    "A" => "1010",
+    "B" => "1011",
+    "C" => "1100",
+    "D" => "1101",
+    "E" => "1110",
+    "F" => "1111"
+  }
+
+  def hex_to_long_binary(hex) do
+    # directly convert "3" to "0011" to maintain leading zeros
+    hex
+    |> String.split("", trim: true)
+    |> Enum.map(fn h -> @hex_to_bin[h] end)
+    |> Enum.join()
+  end
+
   def parse_literal(bstring, literal_bits \\ "")
 
   def parse_literal("0" <> bstring, literal_bits) do
@@ -273,7 +294,7 @@ defmodule Day16 do
       |> String.to_integer(2)
 
     1..num_subpackets
-    |> Enum.reduce({String.slice(11..-1), sum_so_far}, fn _n, {bits, ssf} = _acc ->
+    |> Enum.reduce({String.slice(bstring, 11..-1), sum_so_far}, fn _n, {bits, ssf} = _acc ->
       sum_subpackets(bits, ssf)
     end)
     |> IO.inspect(label: "after 1 length bit")
@@ -291,7 +312,7 @@ end
 
 "38006F45291200"
 |> IO.inspect(label: "Hex")
-|> hex_to_long_binary.()
+|> Day16.hex_to_long_binary()
 # "110100101111111000101000"
 |> IO.inspect(label: "Longbinary")
 |> Day16.version_sum(0)

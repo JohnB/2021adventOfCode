@@ -1,0 +1,98 @@
+<!-- vim: syntax=markdown -->
+
+# Day 18
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+p1data.()
+# 4873
+# |> score.()
+```
+
+## Part 2 (maybe solved above)
+
+* Add part 2 puzzle instructions here
+
+```elixir
+score = fn map ->
+  map
+  |> Map.values()
+  |> Enum.reject(fn count -> count < 2 end)
+  |> Enum.count()
+end
+
+AOC.p1data()
+# 4873
+|> score.()
+```
+
+### Epilogue
+
+This LiveBook lives at https://github.com/JohnB/2021adventOfCode/blob/main/2021adventOfCode/day08.livemd
+
+In an effort to "show my work", here are my searches that helped solve the puzzle.
+Some are very basic.
+
+* blah blah
+  [ginger]()

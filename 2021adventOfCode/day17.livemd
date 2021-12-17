@@ -1,0 +1,187 @@
+<!-- vim: syntax=markdown -->
+
+# Day 17
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### Day 17: Trick Shot
+
+Find an initial vector from 0,0 to anywhere on the target at
+
+```
+x=20..30, y=-10..-5
+```
+
+What is the highest y position it reaches on this trajectory?
+
+If the X direction were reversed, ending at 0, it would slow down to 1. 
+The x position would always be
+
+```
+0,1,3,6,10,15,21,28,36,45
+```
+
+and so the x velocity we need is either 6 or 7 to ever be in the target zone:
+
+* 6, 11, 15, 18, 20, 21
+* 7, 13, 18, 22, 25, 27, 28, 28
+* or 9!
+
+target area: x=241..273, y=-97..-63
+
+```elixir
+# x=20..30, y=-10..-5
+# What is the highest y position it reaches on this trajectory?
+
+crash_if_in_target = fn {x, y, _, _} = state ->
+  y in 0..-98 && IO.inspect({x, y})
+  (((x in 241..273 && y in -97..-63) || x > 273 || y < -97) && :crash) || state
+end
+
+0..100
+|> Enum.reduce({0, 0, 22, 96}, fn step, {x, y, dx, dy} ->
+  {
+    x + dx,
+    y + dy,
+    (dx == 0 && 0) || dx - 1,
+    dy - 1
+  }
+  |> IO.inspect(label: "Step #{step}")
+  |> crash_if_in_target.()
+end)
+```
+
+## Part 2 (maybe solved above)
+
+* Add part 2 puzzle instructions here
+
+```elixir
+pairs =
+  """
+  23,-10  25,-9   27,-5   29,-6   22,-6   21,-7   9,0     27,-7   24,-5
+  25,-7   26,-6   25,-5   6,8     11,-2   20,-5   29,-10  6,3     28,-7
+  8,0     30,-6   29,-8   20,-10  6,7     6,4     6,1     14,-4   21,-6
+  26,-10  7,-1    7,7     8,-1    21,-9   6,2     20,-7   30,-10  14,-3
+  20,-8   13,-2   7,3     28,-8   29,-9   15,-3   22,-5   26,-8   25,-8
+  25,-6   15,-4   9,-2    15,-2   12,-2   28,-9   12,-3   24,-6   23,-7
+  25,-10  7,8     11,-3   26,-7   7,1     23,-9   6,0     22,-10  27,-6
+  8,1     22,-8   13,-4   7,6     28,-6   11,-4   12,-4   26,-9   7,4
+  24,-10  23,-8   30,-8   7,0     9,-1    10,-1   26,-5   22,-9   6,5
+  7,5     23,-6   28,-10  10,-2   11,-1   20,-9   14,-2   29,-7   13,-3
+  23,-5   24,-8   27,-9   30,-7   28,-5   21,-10  7,9     6,6     21,-5
+  27,-10  7,2     30,-9   21,-8   22,-7   24,-9   20,-6   6,9     29,-5
+  8,-2    27,-8   30,-5   24,-7
+  """
+  |> String.split(~r/( |\n)/, trim: true)
+  # |> IO.inspect()
+  |> Enum.map(fn str ->
+    String.split(str, ",")
+    # |> IO.inspect()
+    |> Enum.map(fn coordinate -> String.to_integer(coordinate) end)
+  end)
+  # |> Enum.filter()
+  |> Enum.sort()
+  |> Enum.group_by(fn [x, _] -> x end)
+
+# |> Enum.reverse()
+
+defmodule Day17 do
+  def hits_target({dx, dy}) do
+    hits_target({0, 0, dx, dy})
+  end
+
+  def hits_target({x, y, _dx, _dy}) when x in 241..273 and y in -97..-63 do
+    true
+  end
+
+  def hits_target({x, y, _dx, _dy}) when x > 273 or y < -97 do
+    false
+  end
+
+  def hits_target({x, y, dx, dy}) do
+    hits_target({
+      x + dx,
+      y + dy,
+      (dx == 0 && 0) || dx - 1,
+      dy - 1
+    })
+  end
+end
+
+# x=20..30, y=-10..-5
+
+target_x = 241..273
+target_y = -97..-63
+
+# one-shot count: 1155
+#           from: Enum.count(241..273) * Enum.count(-97..-63)
+for x <- 0..274, y <- -97..98 do
+  Day17.hits_target({x, y})
+end
+|> Enum.count(fn x -> x end)
+
+# 35 here
+# for x <- 21..137, y <- 61..98 do
+#   Day17.hits_target({x, y})  
+# end
+# |> Enum.count(fn x -> x end)
+
+# 1155 from a one-shot
+# for x <- 241..273, y <- -97..-63 do
+#   Day17.hits_target({x, y})  
+# end
+# |> Enum.count(fn x -> x end)
+
+# 5348 is too high
+# 1190 is too low
+# 1311 is too low
+```
