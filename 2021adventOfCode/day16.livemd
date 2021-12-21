@@ -363,4 +363,185 @@ p1data.()
 
 ## Part 2 (maybe solved above)
 
-* Add part 2 puzzle instructions here
+Now that you have the structure of your transmission decoded, you can calculate the value of the expression it represents.
+
+Literal values (type ID 4) represent a single number as described above. The remaining type IDs are more interesting:
+
+* Packets with type ID 0 are sum packets - their value is the sum of the values of their sub-packets. If they only have a single sub-packet, their value is the value of the sub-packet.
+* Packets with type ID 1 are product packets - their value is the result of multiplying together the values of their sub-packets. If they only have a single sub-packet, their value is the value of the sub-packet.
+* Packets with type ID 2 are minimum packets - their value is the minimum of the values of their sub-packets.
+* Packets with type ID 3 are maximum packets - their value is the maximum of the values of their sub-packets.
+* Packets with type ID 5 are greater than packets - their value is 1 if the value of the first sub-packet is greater than the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+* Packets with type ID 6 are less than packets - their value is 1 if the value of the first sub-packet is less than the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+* Packets with type ID 7 are equal to packets - their value is 1 if the value of the first sub-packet is equal to the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+* Using these rules, you can now work out the value of the outermost packet in your BITS transmission.
+
+For example:
+
+* C200B40A82 finds the sum of 1 and 2, resulting in the value 3.
+* 04005AC33890 finds the product of 6 and 9, resulting in the value 54.
+* 880086C3E88112 finds the minimum of 7, 8, and 9, resulting in the value 7.
+* CE00C43D881120 finds the maximum of 7, 8, and 9, resulting in the value 9.
+* D8005AC2A8F0 produces 1, because 5 is less than 15.
+* F600BC2D8F produces 0, because 5 is not greater than 15.
+* 9C005AC2F8F0 produces 0, because 5 is not equal to 15.
+* 9C0141080250320F1802104A08 produces 1, because 1 + 3 = 2 * 2.
+
+What do you get if you evaluate the expression represented by your hexadecimal-encoded BITS transmission?
+
+```elixir
+defmodule Day16Part2 do
+  @hex_to_bin %{
+    "0" => "0000",
+    "1" => "0001",
+    "2" => "0010",
+    "3" => "0011",
+    "4" => "0100",
+    "5" => "0101",
+    "6" => "0110",
+    "7" => "0111",
+    "8" => "1000",
+    "9" => "1001",
+    "A" => "1010",
+    "B" => "1011",
+    "C" => "1100",
+    "D" => "1101",
+    "E" => "1110",
+    "F" => "1111"
+  }
+
+  def hex_to_long_binary(hex) do
+    # directly convert "3" to "0011" to maintain leading zeros
+    hex
+    |> String.split("", trim: true)
+    |> Enum.map(fn h -> @hex_to_bin[h] end)
+    |> Enum.join()
+  end
+
+  def parse_literal(bstring, literal_bits \\ "")
+
+  def parse_literal("0" <> bstring, literal_bits) do
+    nibble = String.slice(bstring, 0..3)
+    # |> IO.inspect(label: "final(#{literal_bits}")
+    {
+      String.slice(bstring, 4..-1),
+      String.to_integer(literal_bits <> nibble, 2)
+      # |> IO.inspect(label: "as integer(2)")
+    }
+  end
+
+  def parse_literal("1" <> bstring, literal_bits) do
+    nibble = String.slice(bstring, 0..3)
+    # |> IO.inspect(label: "partial")
+
+    parse_literal(String.slice(bstring, 4..-1), literal_bits <> nibble)
+  end
+
+  def sum_packets("", sum_so_far), do: {"", sum_so_far}
+
+  def sum_packets("100" <> bstring, sum_so_far) do
+    {rest, _literal} =
+      bstring
+      |> parse_literal()
+      |> IO.inspect(label: "summing at #{sum_so_far}")
+
+    {rest, sum_so_far}
+  end
+
+  def sum_packets(bstring, sum_so_far) do
+    _packet_type =
+      bstring
+      |> String.slice(0..2)
+      |> String.to_integer(2)
+      |> IO.inspect(label: "packet type")
+
+    bstring
+    |> String.slice(3..-1)
+    |> sum_subpackets(sum_so_far)
+  end
+
+  def version_sum("", sum_so_far), do: {"", sum_so_far}
+
+  def version_sum(bstring, sum_so_far) do
+    version =
+      bstring
+      |> String.slice(0..2)
+      |> String.to_integer(2)
+
+    IO.inspect([version, sum_so_far], label: "version & sum")
+
+    {rest, updated_sum} =
+      bstring
+      |> String.slice(3..-1)
+      |> IO.inspect(label: "sum-subbing")
+      |> sum_packets(sum_so_far + version)
+      |> IO.inspect(label: "after sum-subbing")
+
+    version_sum(rest, updated_sum)
+  end
+
+  def ignore_all_zeros({string, sum_so_far}) do
+    {(String.contains?(string, "1") && string) || "", sum_so_far}
+  end
+
+  def sum_subpackets("", sum_so_far), do: {"", sum_so_far}
+
+  def sum_subpackets("0" <> bstring, sum_so_far) do
+    # If the length type ID is 0, then the next 15 bits are length
+    subpackets_length =
+      bstring
+      |> String.slice(0, 15)
+      |> IO.inspect(label: "15 chars?")
+      |> String.to_integer(2)
+
+    {bits, ssf} =
+      bstring
+      |> String.slice(15, subpackets_length)
+      |> version_sum(sum_so_far)
+      |> IO.inspect(label: "after 0 length bit")
+
+    # verify we ate the entire subpackets
+    IO.inspect(bits, label: "should be blank")
+
+    {String.slice(bstring, (15 + subpackets_length)..-1), ssf}
+    |> ignore_all_zeros()
+    |> IO.inspect(label: "end of 0 subbacket")
+  end
+
+  def sum_subpackets("1" <> bstring, sum_so_far) do
+    #   If the length type ID is 1, then the next 11 bits are number of subpackets
+    num_subpackets =
+      bstring
+      |> String.slice(0..10)
+      |> String.to_integer(2)
+      |> IO.inspect(label: "11 bits for num_subpackets")
+
+    1..num_subpackets
+    |> Enum.reduce({String.slice(bstring, 11..-1), sum_so_far}, fn _n, {bits, ssf} = _acc ->
+      version_sum(bits, ssf)
+    end)
+    |> IO.inspect(label: "end of 1 subbacket")
+  end
+end
+
+hex_and_expectation = [
+  {"C200B40A82", 3},
+  {"04005AC33890", 54},
+  {"880086C3E88112", 7},
+  {"CE00C43D881120", 9},
+  {"D8005AC2A8F0", 15},
+  {"F600BC2D8F", 15},
+  {"9C005AC2F8F0", 15},
+  {"9C0141080250320F1802104A08", 2}
+]
+
+hex_and_expectation
+|> Enum.map(fn {hex, expectation} ->
+  hex
+  |> IO.inspect(label: "Hex")
+  |> Day16Part2.hex_to_long_binary()
+  |> Day16Part2.version_sum(0)
+end)
+
+# p1data.()
+```
