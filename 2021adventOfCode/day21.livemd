@@ -1,6 +1,6 @@
 <!-- vim: syntax=markdown -->
 
-# Template for Day 11
+# Day 21
 
 ## Installation and Data
 
@@ -58,16 +58,40 @@ end
 * Add part 1 puzzle instructions here
 
 ```elixir
-score = fn map ->
-  map
-  |> Map.values()
-  |> Enum.reject(fn count -> count < 2 end)
-  |> Enum.count()
+defmodule Day21 do
+  # Player 1 starting position: 4
+  # Player 2 starting position: 7
+  # use 0-based spaces and add 1 before scoring and display
+  @start {{3, 0}, {6, 0}}
+
+  # Insight, taking 3 numbers at a time means it increases by 9
+  # each turn (except the start).
+  def iterate(roll_number, {{_space1, score1}, {_space2, score2}} = acc) when score2 >= 1000 do
+    IO.inspect([roll_number, acc], label: "DONE")
+    result = (roll_number - 1) * 3 * score1
+    IO.puts("Day21 part 1 solution: #{result}")
+  end
+
+  def iterate(roll_number, {{space1, score1}, {space2, score2}} = acc) do
+    new_space = rem(space1 + 9 * roll_number - 3, 10)
+    new_score = score1 + new_space + 1
+
+    if roll_number < 10 || roll_number > 329 do
+      IO.inspect([roll_number, {{space1 + 1, score1}, {space2 + 1, score2}}])
+    end
+
+    # swap front/back each iteration - they should go up roughly equally??
+    iterate(roll_number + 1, {{space2, score2}, {new_space, new_score}})
+  end
+
+  def solve() do
+    iterate(1, @start)
+  end
 end
 
-p1data.()
-# 4873
-# |> score.()
+Day21.solve()
+
+# p1data.()
 ```
 
 ## Part 2 (maybe solved above)

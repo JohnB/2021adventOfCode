@@ -1,0 +1,151 @@
+<!-- vim: syntax=markdown -->
+
+# Day 22
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### Day 22: Reactor Reboot
+
+Operating at these extreme ocean depths has overloaded the submarine's reactor; it needs to be rebooted.
+
+The reactor core is made up of a large 3-dimensional grid made up entirely of cubes, one cube per integer 3-dimensional coordinate (x,y,z). Each cube can be either on or off; at the start of the reboot process, they are all off. (Could it be an old model of a reactor you've seen before?)
+
+To reboot the reactor, you just need to set all of the cubes to either on or off by following a list of reboot steps (your puzzle input). Each step specifies a cuboid (the set of all cubes that have coordinates which fall within ranges for x, y, and z) and whether to turn all of the cubes in that cuboid on or off.
+
+---
+
+Execute the reboot steps. Afterward, considering only cubes in the region x=-50..50,y=-50..50,z=-50..50, how many cubes are on?
+
+```elixir
+defmodule Day22 do
+  def parse_coords(string) do
+    [_x, _y, _z] =
+      string
+      |> String.split(",")
+      |> Enum.zip(["x", "y", "z"])
+      |> Enum.map(fn {equation, expected_variable} ->
+        [variable, range] = String.split(equation, "=")
+
+        unless variable == expected_variable do
+          IO.puts("mismatch: '#{expected_variable}' not in '#{equation}'")
+        end
+
+        [_a, _b] =
+          range
+          |> String.split("..")
+          |> Enum.map(&String.to_integer/1)
+      end)
+  end
+
+  def normalize(coord) do
+    (coord < -50 && -50) || ((coord > 50 && 50) || coord)
+  end
+
+  def _mark(_dir, [[x1, x2], [y1, y2], [z1, z2]], mesh)
+      when (x1 < -50 and x2 < -50) or
+             (x1 > 50 and x2 > 50) or
+             (y1 < -50 and y2 < -50) or
+             (y1 > 50 and y2 > 50) or
+             (z1 < -50 and z2 < -50) or
+             (z1 > 50 and z2 > 50) do
+    IO.puts("OUT: [#{x1},#{x2}],[#{y1},#{y2}],[#{z1},#{z2}]")
+    mesh
+  end
+
+  def _mark(dir, [[x1, x2], [y1, y2], [z1, z2]], mesh) do
+    x1 = normalize(x1)
+    x2 = normalize(x2)
+    y1 = normalize(y1)
+    y2 = normalize(y2)
+    z1 = normalize(z1)
+    z2 = normalize(z2)
+
+    IO.puts("Inbounds: [#{x1},#{x2}],[#{y1},#{y2}],[#{z1},#{z2}]")
+    all_coords = for x <- x1..x2, y <- y1..y2, z <- z1..z2, do: [x, y, z]
+
+    all_coords
+    # |> IO.inspect(label: "xyz")
+    |> Enum.reduce(mesh, fn [x, y, z], acc ->
+      # IO.inspect([x,y,z], label: "x,y,z  (#{x},#{y},#{z})")
+      Map.put(acc, "#{x},#{y},#{z}", dir)
+      # |> IO.inspect(label: "inner acc")
+    end)
+
+    # |> IO.inspect(label: "outer mesh")
+  end
+
+  def mark("on " <> coords, mesh) do
+    _mark("on", parse_coords(coords), mesh)
+  end
+
+  def mark("off " <> coords, mesh) do
+    _mark("off", parse_coords(coords), mesh)
+  end
+
+  def solve(lines) do
+    lines
+    |> Enum.reduce(%{}, fn line, acc ->
+      line
+      # |> IO.inspect(label: "line: #{inspect(acc)}")
+      |> mark(acc)
+    end)
+    |> Enum.filter(fn {_k, v} -> v == "on" end)
+    |> Enum.count()
+  end
+end
+
+p1data.()
+|> AOC.as_single_lines()
+|> Day22.solve()
+```
+
+## Part 2 (maybe solved above)
