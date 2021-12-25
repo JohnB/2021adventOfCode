@@ -1,0 +1,92 @@
+<!-- vim: syntax=markdown -->
+
+# Day 23
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
+```elixir
+"""
+#############
+#...........#
+###A#D#A#B###
+  #C#C#D#B#
+  #########
+
+  a3 - h0.  7
+  a1 - h1   2
+  c1 - h3   300
+  a1 - 1.   3
+  a0 - 1.   3
+  b4 - h10  30
+  b4 - h9.  30
+  d2 - 4.   7000
+  d3 - 4.   5000
+  h3 - 3    500
+  c2 - 3.   500
+  h9 - 2    70
+  h10 - 2   70
+
+12000 + 1300 + 140 + 13 = 13453 ???
+12000 + 1300 + 180 + 19 = 13499 NOPE - too high
+12000 + 1300 + 190 + 20 = 13510 NOPE - too high
+12000 + 1300 + 200 + 15 = 13515 NOPE
+
+"""
+
+# p1data.()
+```
+
+## Part 2 (maybe solved above)

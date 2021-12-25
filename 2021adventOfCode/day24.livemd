@@ -1,0 +1,154 @@
+<!-- vim: syntax=markdown -->
+
+# Day 24
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
+```elixir
+defmodule Day24 do
+  @register_start %{
+    "w" => 0,
+    "x" => 0,
+    "y" => 0,
+    "z" => 0,
+    input_index: 0
+  }
+  @model_guess "9157924689999999"
+
+  def parse_b(b, acc) when b in ~w(w x y z) do
+    acc[b]
+  end
+
+  def parse_b(b, _acc) do
+    String.to_integer(b)
+  end
+
+  def evaluate("inp", a, _b, acc) do
+    input =
+      String.slice(@model_guess, acc.input_index, 1)
+      |> String.to_integer()
+      |> IO.inspect(label: "input_day")
+
+    acc
+    |> IO.inspect(label: inspect(input))
+    |> Map.put(a, ?0 + input)
+    |> Map.put(:input_index, acc.input_index + 1)
+  end
+
+  def evaluate("add", a, [b], acc) do
+    acc
+    |> Map.put(a, acc[a] + parse_b(b, acc))
+  end
+
+  def evaluate("mul", a, [b], acc) do
+    acc
+    |> Map.put(a, acc[a] * parse_b(b, acc))
+  end
+
+  def evaluate("div", a, [b], acc) do
+    acc
+    |> Map.put(a, div(acc[a], parse_b(b, acc)))
+  end
+
+  def evaluate("mod", a, [b], acc) do
+    acc
+    |> Map.put(a, rem(acc[a], parse_b(b, acc)))
+  end
+
+  def evaluate("eql", a, [b], acc) do
+    if acc[a] == parse_b(b, acc) do
+      Map.put(acc, a, 1)
+    else
+      Map.put(acc, a, 0)
+    end
+  end
+
+  """
+  inp w
+  mul x 0    clear x
+  add x z.   with ^, effectively x=z
+  mod x 26.  map x into a-z
+  div z 26.  slice off what we just mapped
+  add x -10
+  eql x w
+  eql x 0.  set x to 0 or 1
+  mul y 0.  clear y
+  add y 25
+  mul y x
+  add y 1
+  mul z y
+  mul y 0
+  add y w
+  add y 13
+  mul y x
+  add z y
+  """
+
+  def solve(text) do
+    text
+    |> AOC.as_single_lines()
+    |> Enum.reduce(@register_start, fn instruction, acc ->
+      [op, a | b] = String.split(instruction, " ", trim: true)
+      # |> IO.inspect(label: "acc=#{inspect(acc)}")
+      evaluate(op, a, b, acc)
+      |> IO.inspect(label: inspect([op, a, b]))
+    end)
+  end
+end
+
+p1data.()
+|> Day24.solve()
+```

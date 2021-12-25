@@ -1,0 +1,170 @@
+<!-- vim: syntax=markdown -->
+
+# Day 25
+
+## Installation and Data
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.4.1"}
+])
+
+IEx.Helpers.c("lib/advent_of_code.ex")
+alias AdventOfCode, as: AOC
+alias Kino.Input
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_day = Kino.Input.number("Day")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1example = Kino.Input.textarea("Example Data")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_p1puzzleInput = Kino.Input.textarea("Puzzle Input")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input_source_select =
+  Kino.Input.select("Source", [{:example, "example"}, {:puzzle_input, "puzzle input"}])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+p1data = fn ->
+  (Kino.Input.read(input_source_select) == :example &&
+     Kino.Input.read(input_p1example)) ||
+    Kino.Input.read(input_p1puzzleInput)
+end
+```
+
+## Part 1
+
+### part 1 title here
+
+* Add part 1 puzzle instructions here
+
+```elixir
+defmodule Day25 do
+  @east ">"
+  @south "v"
+  @empty "."
+
+  def display_grid(grid, text) do
+    IO.puts("\n--- #{text}")
+
+    0..grid.last_cell
+    |> Enum.chunk_every(grid.grid_width)
+    |> Enum.map(fn indexes ->
+      indexes
+      |> Enum.map(fn index -> grid[index] end)
+      |> IO.puts()
+    end)
+
+    grid
+  end
+
+  def go_east(grid) do
+    next_east_cell = fn cell, grid ->
+      next = cell + 1
+
+      if rem(next, grid.grid_width) == 0 do
+        next - grid.grid_width
+      else
+        next
+      end
+    end
+
+    0..grid.last_cell
+    |> Enum.reduce(grid, fn cell, acc ->
+      if grid[cell] == @east do
+        next_cell = next_east_cell.(cell, grid)
+
+        if grid[next_cell] == @empty do
+          acc
+          |> Map.put(next_cell, acc[cell])
+          |> Map.put(cell, @empty)
+        else
+          acc
+        end
+      else
+        acc
+      end
+    end)
+  end
+
+  def go_south(grid) do
+    next_south_cell = fn cell, grid ->
+      next = cell + grid.grid_width
+
+      if next > grid.last_cell do
+        rem(cell, grid.grid_width)
+      else
+        next
+      end
+    end
+
+    0..grid.last_cell
+    |> Enum.reduce(grid, fn cell, acc ->
+      if grid[cell] == @south do
+        next_cell = next_south_cell.(cell, grid)
+
+        if grid[next_cell] == @empty do
+          acc
+          |> Map.put(next_cell, acc[cell])
+          |> Map.put(cell, @empty)
+        else
+          acc
+        end
+      else
+        acc
+      end
+    end)
+  end
+
+  def move(grid, step) do
+    updated =
+      grid
+      |> go_east()
+      |> go_south()
+
+    # |> display_grid("Step #{step}")
+
+    if updated == grid || step > 2000 do
+      display_grid(updated, "Solved after #{step} steps")
+    else
+      move(updated, step + 1)
+    end
+  end
+
+  def solve(text) do
+    grid =
+      text
+      |> AOC.as_grid()
+
+    # |> display_grid("Start")
+
+    move(grid, 1)
+  end
+end
+
+p1data.()
+|> Day25.solve()
+
+"Done?"
+```
+
+## Part 2 (maybe solved above)
